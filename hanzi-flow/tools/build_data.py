@@ -12,6 +12,7 @@ Outputs (project/data):
 """
 import json, os, re, sys, unicodedata
 from collections import defaultdict, Counter
+from pypinyin import pinyin as _pinyin, Style as _Style
 
 SRC = sys.argv[1]
 OUT = sys.argv[2]
@@ -20,9 +21,9 @@ os.makedirs(OUT, exist_ok=True)
 TONE_MARKS = {'̄': 1, '́': 2, '̌': 3, '̀': 4}
 
 def syllables(pinyin):
-    """'nǐ hǎo' -> [['ni',3],['hao',3]]; keeps ü."""
+    """'nǐ hǎo' -> [['ni',3],['hao',3]]; keeps ü; merges a standalone erhua 'r' into the previous syllable."""
     out = []
-    for raw in pinyin.split():
+    for raw in pinyin.replace('u:', 'ü').split():
         tone = 5
         base = []
         for ch in unicodedata.normalize('NFD', raw.lower()):
@@ -36,9 +37,69 @@ def syllables(pinyin):
                 base.append(ch)
         b = unicodedata.normalize('NFC', ''.join(base))
         b = re.sub(r"[^a-zü]", '', b)
+        if not b:
+            continue
+        if b == 'r' and out:
+            out[-1][0] += 'r'
+            continue
+        out.append([b, tone])
+    return out
+
+def is_erhua(word, pinyin):
+    """True for 哪儿 'nǎr', 女孩儿 'nǚ hái r', 有空儿 'yǒukòngr5'; False for 女儿 'nǚ ér'."""
+    if len(word) < 2 or not word.endswith('儿'):
+        return False
+    toks = pinyin.split()
+    last = norm_py(toks[-1]) if toks else ''
+    return last.endswith('r') and last != 'er'
+
+def syllables_by_char(word, erhua):
+    """Per-character pinyin from pypinyin, used when CEDICT pinyin is not syllable-separated."""
+    toks = [x[0] for x in _pinyin(word, style=_Style.TONE3, heteronym=False, v_to_u=True, neutral_tone_with_five=True)]
+    out = []
+    for tok in toks:
+        tone = int(tok[-1]) if tok[-1].isdigit() else 5
+        b = re.sub(r"[^a-zü]", '', tok.replace('u:', 'ü'))
         if b:
             out.append([b, tone])
+    if erhua and len(out) >= 2 and out[-1][0] in ('er', 'r'):
+        out[-2][0] += 'r'
+        out.pop()
     return out
+
+def norm_py(p):
+    d = unicodedata.normalize('NFD', p.replace('u:', 'ü').lower())
+    keep = []
+    for ch in d:
+        if ch == '\u0308':
+            keep.append(ch)
+        elif unicodedata.category(ch).startswith('M'):
+            continue
+        else:
+            keep.append(ch)
+    return re.sub(r'[^a-zü]', '', unicodedata.normalize('NFC', ''.join(keep)))
+
+def pick_form(e):
+    """Choose the CEDICT form that matches the word's everyday reading (not a surname or rare reading)."""
+    forms = [f for f in e['forms'] if not all(m.lower().startswith(JUNK_PREFIXES) for m in f['meanings'])] or e['forms']
+    def surname_only(f):
+        return all(m.lower().startswith(('surname ', '(coll.)', 'old variant', 'variant')) for m in f['meanings'])
+    good = [f for f in forms if not surname_only(f)] or forms
+    word = e['simplified']
+    want = ''.join(x[0] for x in _pinyin(word, style=_Style.NORMAL, heteronym=False, v_to_u=True))
+    want_t = ''.join(x[0] for x in _pinyin(word, style=_Style.TONE3, heteronym=False, v_to_u=True, neutral_tone_with_five=True))
+    pos0 = (e.get('pos') or [''])[0]
+    def score(f):
+        p = f['transcriptions']['pinyin']
+        y = syllables(p)
+        s = 0.0
+        if norm_py(p) == want: s += 4
+        if ''.join(b + str(tn) for b, tn in y) == want_t: s += 2
+        if pos0 in ('u', 'y') and len(word) == 1 and y and all(tn == 5 for _, tn in y): s += 3
+        if not p[:1].isupper(): s += 1
+        s += min(len(f['meanings']), 3) * 0.1
+        return s
+    return max(good, key=score)
 
 JUNK_PREFIXES = ('variant of', 'old variant of', 'erhua variant', 'see ', 'also written', 'also pr.', 'taiwan pr.', 'cl:', 'abbr. for', 'used in ')
 
@@ -80,17 +141,18 @@ for e in complete:
         if not lv:
             continue
     level = min(lv)
-    form = e['forms'][0]
-    for f in e['forms']:
-        if not all(m.lower().startswith(JUNK_PREFIXES) for m in f['meanings']):
-            form = f
-            break
+    form = pick_form(e)
     tr = form['transcriptions']
+    erhua = is_erhua(e['simplified'], tr['pinyin'])
+    y = syllables(tr['pinyin'])
+    if len(y) != len(e['simplified']) - (1 if erhua else 0):
+        y = syllables_by_char(e['simplified'], erhua)
     words.append({
         's': e['simplified'],
         't': form['traditional'] if form['traditional'] != e['simplified'] else '',
-        'p': tr['pinyin'],
-        'y': syllables(tr['pinyin']),
+        'p': tr['pinyin'].replace('u:', 'ü'),
+        'y': y,
+        'erhua': erhua,
         'm': clean_meanings(form['meanings']),
         'l': level,
         'q': e.get('frequency') or 99999,
@@ -102,12 +164,15 @@ words.sort(key=lambda w: (w['l'], w['q'], w['s']))
 assert len(set(w['s'] for w in words)) == len(words), 'duplicate simplified words'
 
 # verify syllable count == character count where possible (diagnostic only)
-mismatch = [w['s'] for w in words if len(w['y']) != len(w['s'])]
+mismatch = [w['s'] for w in words if len(w['y']) != len(w['s']) - (1 if w['erhua'] else 0)]
 print('words:', len(words), 'syllable/char mismatches:', len(mismatch), mismatch[:12])
 from collections import Counter as _C
 print('per level (old+new3.0 extras):', sorted(_C((w['l'], w['src']) for w in words).items()))
 
-vocab_rows = [[w['s'], w['t'], w['p'], w['y'], w['m'], w['l'], ','.join(w['pos']), ''.join(w['cl'])] for w in words]
+vocab_rows = [[w['s'], w['t'], w['p'], w['y'], w['m'], w['l'], ','.join(w['pos']), '/'.join(w['cl'][:3])] for w in words]
+for chk in ('说', '都', '吗', '吧', '得', '着', '还', '那', '听', '读', '看', '打', '几', '和', '中', '了', '地', '过', '哪儿', '女儿', '有空儿', '侵略', '致力于', '中国'):
+    w = next((w for w in words if w['s'] == chk), None)
+    if w: print('  check', chk, w['y'], w['m'][0][:40])
 
 # ---------------- characters ----------------
 chars_in_words = {}
@@ -200,6 +265,7 @@ print('nazmul sentences:', len(sentences))
 rox = os.path.join(SRC, 'roxaleen', 'sentences.json')
 if os.path.exists(rox) and os.path.getsize(rox) > 10000:
     from pypinyin import pinyin, Style
+    ERHUA = {w['s'] for w in words if w['erhua']}
     data = json.load(open(rox, encoding='utf-8'))
     have = Counter()
     for s in sentences:
@@ -228,7 +294,16 @@ if os.path.exists(rox) and os.path.getsize(rox) > 10000:
         useful = [w for w in tags if have[w] < 2 and level_of[w] >= max(1, lvl - 1)]
         if not useful:
             continue
-        py = ' '.join(x[0] for x in pinyin(zh, style=Style.TONE, heteronym=False))
+        syl = [x[0] for x in pinyin(zh, style=Style.TONE, heteronym=False, errors=lambda t: list(t))]
+        if len(syl) == len(zh):
+            for w in tags:
+                if w in ERHUA:
+                    for m in re.finditer(re.escape(w), zh):
+                        k = m.end() - 1
+                        if k > 0 and syl[k]:
+                            syl[k - 1] += 'r'
+                            syl[k] = ''
+        py = ' '.join(s for s in syl if s)
         py = re.sub(r'\s+([，。！？、；：,.!?])', r'\1', py)
         sentences.append([zh, py, tr, lvl, tags, 't'])
         for w in tags:
