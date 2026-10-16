@@ -1,5 +1,6 @@
 # Publishes the Hanzi Flow app to GitHub Pages.
 # One-time setup on GitHub: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Until that is done the workflow finishes green with a notice instead of failing.
 # After that, every push to main redeploys https://<user>.github.io/<repo>/
 name: Deploy Hanzi Flow to GitHub Pages
 on:
@@ -22,9 +23,23 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - id: pages
+        name: Check that GitHub Pages is enabled
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" >/dev/null 2>&1; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=GitHub Pages is not enabled yet::Open Settings → Pages → Build and deployment → Source: GitHub Actions, then re-run this workflow (Actions → Deploy Hanzi Flow to GitHub Pages → Run workflow)."
+          fi
+      - if: steps.pages.outputs.enabled == 'true'
+        uses: actions/configure-pages@v5
+      - if: steps.pages.outputs.enabled == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: hanzi-flow
-      - id: deployment
+      - if: steps.pages.outputs.enabled == 'true'
+        id: deployment
         uses: actions/deploy-pages@v4
