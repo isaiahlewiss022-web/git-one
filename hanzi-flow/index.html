@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>Hanzi Flow</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Serif+SC:wght@400;700&display=swap">
+<style>
+/* Layout: one 760px column of paper; practice areas borrow the 田字格 writing grid; bottom tab bar on every width. */
+:root{
+  --paper:#f1f2ee; --card:#ffffff; --card-2:#f7f8f5;
+  --ink:#1b1f24; --ink-2:#535a64; --ink-3:#858c96;
+  --line:#d8dbd4; --line-2:#e7e9e3;
+  --accent:#2f4c8c; --accent-ink:#ffffff; --accent-soft:#e2e8f6;
+  --seal:#b3302b;
+  --good:#2b7a5c; --good-soft:#dcefe5;
+  --almost:#a26a0f; --almost-soft:#f7ead0;
+  --bad:#b3302b; --bad-soft:#f6dddb;
+  --t1:#c2443a; --t2:#2e8a56; --t3:#2a63c4; --t4:#8a4fb0; --t5:#7c838c;
+  --stage-1:#c7d2ec; --stage-2:#7d97d1; --stage-3:#2f4c8c;
+  --shadow:0 1px 2px rgba(20,24,30,.05),0 10px 28px -14px rgba(20,24,30,.22);
+  --display:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --hanzi:"Kaiti SC","KaiTi","STKaiti","BiauKai","Noto Serif SC","Songti SC","SimSun",serif;
+  --hanzi-ui:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC","Noto Sans SC",sans-serif;
+  --radius:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#14171b; --card:#1d2126; --card-2:#22272d;
+  --ink:#e9e7e1; --ink-2:#aab0b8; --ink-3:#7b828c;
+  --line:#2e343c; --line-2:#262b32;
+  --accent:#94aae8; --accent-ink:#121a2c; --accent-soft:#273349;
+  --seal:#e26b60;
+  --good:#6fc099; --good-soft:#1e3a2e;
+  --almost:#dcaa4f; --almost-soft:#3b2f16;
+  --bad:#e26b60; --bad-soft:#44241f;
+  --t1:#f07f73; --t2:#5fc78c; --t3:#7fa9f2; --t4:#c48fe3; --t5:#9ba2ab;
+  --stage-1:#34436a; --stage-2:#5f7bc2; --stage-3:#a9bdf2;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 28px -14px rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --paper:#14171b; --card:#1d2126; --card-2:#22272d;
+  --ink:#e9e7e1; --ink-2:#aab0b8; --ink-3:#7b828c;
+  --line:#2e343c; --line-2:#262b32;
+  --accent:#94aae8; --accent-ink:#121a2c; --accent-soft:#273349;
+  --seal:#e26b60;
+  --good:#6fc099; --good-soft:#1e3a2e;
+  --almost:#dcaa4f; --almost-soft:#3b2f16;
+  --bad:#e26b60; --bad-soft:#44241f;
+  --t1:#f07f73; --t2:#5fc78c; --t3:#7fa9f2; --t4:#c48fe3; --t5:#9ba2ab;
+  --stage-1:#34436a; --stage-2:#5f7bc2; --stage-3:#a9bdf2;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 28px -14px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:28px;font-weight:800}
+h2{font-size:20px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-2)}
+.top .wrap{display:flex;align-items:center;gap:12px;min-height:56px}
+.brand{display:flex;align-items:baseline;gap:8px;font-family:var(--display);font-weight:800;font-size:20px;letter-spacing:-.01em;white-space:nowrap}
+@media (max-width:400px){.brand span:not(.zi){font-size:17px}.chip{padding:3px 8px;font-size:12px}}
+.brand .zi{font-family:var(--hanzi);font-size:26px;color:var(--seal);font-weight:400}
+.chips{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+.chip .zi{font-family:var(--hanzi);font-size:15px;color:var(--seal)}
+#screen{padding-block:18px 110px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grow{flex:1 1 auto;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card.soft{background:var(--card-2);border-color:var(--line-2)}
+.muted{color:var(--ink-2)}
+.faint{color:var(--ink-3)}
+.small{font-size:13px}
+.label{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.tnum{font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;min-height:44px;text-decoration:none;transition:transform .08s ease,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.block{width:100%}
+.btn.sm{padding:7px 12px;min-height:36px;font-size:14px;border-radius:10px}
+.btn[disabled]{opacity:.5;cursor:default}
+.iconbtn{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card)}
+.iconbtn svg{width:20px;height:20px}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* pinyin + tones */
+.py{font-family:var(--body);font-weight:500;letter-spacing:.01em}
+.t1{color:var(--t1)}.t2{color:var(--t2)}.t3{color:var(--t3)}.t4{color:var(--t4)}.t5{color:var(--t5)}
+.hz{font-family:var(--hanzi-ui)}
+.hz-big{font-family:var(--hanzi);font-size:clamp(60px,17vw,112px);line-height:1.05;text-align:center;letter-spacing:.04em}
+.hz-med{font-family:var(--hanzi);font-size:44px;line-height:1.1}
+.tone-svg{width:34px;height:26px;color:currentColor}
+/* home */
+.hero{display:grid;gap:14px}
+.rank{display:flex;align-items:center;gap:14px}
+.rank .zi{font-family:var(--hanzi);font-size:40px;line-height:1;color:var(--seal);width:56px;text-align:center}
+.bar{height:8px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .4s ease}
+.bigcta{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;padding:18px 20px;border-radius:var(--radius);background:var(--accent);color:var(--accent-ink);border:0;box-shadow:var(--shadow)}
+.bigcta .t{font-family:var(--display);font-size:22px;font-weight:800;line-height:1.1}
+.bigcta .s{opacity:.85;font-size:14px;margin-top:4px}
+.bigcta .zi{font-family:var(--hanzi);font-size:44px;line-height:1;opacity:.95}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tilebtn{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;border-radius:var(--radius);border:1px solid var(--line);background:var(--card);text-align:left;min-height:96px}
+.tilebtn .zi{font-family:var(--hanzi);font-size:28px;line-height:1;color:var(--accent)}
+.tilebtn b{font-family:var(--display);font-size:16px}
+.tilebtn span{font-size:13px;color:var(--ink-2)}
+/* tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:9;padding:0 max(12px,env(safe-area-inset-left,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px))}
+.tabs .inner{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px 8px;border:0;background:transparent;color:var(--ink-2);font-size:12px;font-weight:600}
+.tab .zi{font-family:var(--hanzi);font-size:22px;line-height:1;color:var(--ink-3)}
+.tab.active{color:var(--accent)}
+.tab.active .zi{color:var(--seal)}
+/* session */
+.sess-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sess-top .bar{flex:1}
+.task{display:grid;gap:18px}
+.prompt{display:grid;place-items:center;gap:10px;padding:26px 16px;border-radius:var(--radius);background:var(--card);border:1px solid var(--line);min-height:170px;text-align:center}
+.prompt .q{font-size:13px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;font-weight:600}
+.prompt .en{font-family:var(--display);font-size:26px;font-weight:700;max-width:28ch}
+.prompt .py{font-size:30px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:17px;min-height:52px;transition:background .15s,border-color .15s}
+.opt .key{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--card-2);color:var(--ink-3);border:1px solid var(--line-2)}
+.opt .hz{font-size:24px}
+.opt.correct{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.dim{opacity:.5}
+.opt[disabled]{cursor:default}
+.typebox{display:flex;gap:10px}
+.typebox input{flex:1;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:18px}
+.feedback{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:12px;border:1px solid var(--line)}
+.feedback.good{background:var(--good-soft);border-color:var(--good)}
+.feedback.almost{background:var(--almost-soft);border-color:var(--almost)}
+.feedback.again{background:var(--bad-soft);border-color:var(--bad)}
+.feedback .v{font-family:var(--display);font-weight:800;font-size:17px}
+.feedback .d{font-size:14px;color:var(--ink-2)}
+.feedback .py{font-size:18px}
+.stagepill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--card-2);border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.stagepill i{width:8px;height:8px;border-radius:50%;background:var(--stage-2);display:inline-block}
+.intro{display:grid;gap:16px}
+.intro .head{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.intro .meanings{margin:0;padding-left:18px;font-size:17px}
+.breakdown{display:grid;gap:8px}
+.breakdown .ch{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:start;padding:10px 12px;border-radius:12px;background:var(--card-2);border:1px solid var(--line-2)}
+.breakdown .ch .zi{font-family:var(--hanzi);font-size:36px;line-height:1;text-align:center}
+.breakdown .ch .def{font-weight:500}
+.breakdown .ch .hint{font-size:13px;color:var(--ink-2)}
+.sent{display:grid;gap:4px;padding:12px 14px;border-radius:12px;border:1px solid var(--line-2);background:var(--card-2);cursor:pointer}
+.sent .zh{font-family:var(--hanzi-ui);font-size:20px}
+.sent .zh mark{background:transparent;color:var(--accent);font-weight:600}
+.sent .pyl{font-size:13px;color:var(--ink-3)}
+.sent .en{font-size:14px;color:var(--ink-2)}
+.writers{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.tzg{position:relative;width:min(260px,72vw);aspect-ratio:1;max-width:100%;border:2px solid var(--line);border-radius:6px;background:var(--card);overflow:hidden;touch-action:none}
+.tzg::before,.tzg::after{content:"";position:absolute;inset:0;pointer-events:none}
+.tzg::before{background:linear-gradient(var(--line-2),var(--line-2)) center/100% 1px no-repeat,linear-gradient(var(--line-2),var(--line-2)) center/1px 100% no-repeat}
+.tzg::after{background:linear-gradient(to top right,transparent calc(50% - .5px),var(--line-2) 50%,transparent calc(50% + .5px)),linear-gradient(to top left,transparent calc(50% - .5px),var(--line-2) 50%,transparent calc(50% + .5px))}
+.tzg svg{position:relative;z-index:1;width:100%;height:100%;display:block}
+.tzg.sm{width:96px;border-width:1px}
+.tzg.done{border-color:var(--good)}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.dots i.on{background:var(--accent)}
+.dots i.ok{background:var(--good)}
+/* match board */
+.board{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.board .col{display:grid;gap:10px;align-content:start}
+.tile{display:flex;align-items:center;justify-content:center;gap:8px;min-height:58px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:17px;text-align:center;user-select:none;-webkit-user-select:none;transition:transform .12s,opacity .3s,border-color .12s,background .12s;word-break:break-word}
+.tile.hz{font-family:var(--hanzi-ui);font-size:28px}
+.tile.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent);background:var(--accent-soft)}
+.tile.done{opacity:.18;pointer-events:none;transform:scale(.96)}
+.tile.ok{border-color:var(--good);background:var(--good-soft)}
+.tile.shake{animation:shake .4s;border-color:var(--bad);background:var(--bad-soft)}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+.scoreline{display:flex;align-items:center;gap:14px;font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+.scoreline .big{font-size:28px}
+.combo{font-size:13px;padding:2px 8px;border-radius:999px;background:var(--almost-soft);color:var(--almost);font-weight:700}
+.timer{height:8px;background:var(--line-2);border-radius:4px;overflow:hidden}
+.timer>i{display:block;height:100%;background:var(--accent);transition:width .1s linear}
+.timer.low>i{background:var(--bad)}
+.seal{width:64px;height:64px;border:3px solid var(--seal);color:var(--seal);display:grid;place-items:center;font-family:var(--hanzi);font-size:34px;border-radius:8px;transform:rotate(-7deg);flex:none}
+.seal.two{font-size:22px;letter-spacing:-.05em}
+/* lists */
+.wrow{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:0;border-bottom:1px solid var(--line-2);background:transparent}
+.wrow:last-child{border-bottom:0}
+.wrow .hz{font-size:24px;min-width:48px}
+.wrow .m{color:var(--ink-2);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.fchip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:500}
+.fchip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.search{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+/* sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(10,12,16,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:760px;max-height:88vh;overflow:auto;background:var(--paper);border-radius:20px 20px 0 0;padding:18px max(16px,env(safe-area-inset-left,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));border:1px solid var(--line);border-bottom:0}
+.sheet .head{display:flex;align-items:flex-start;gap:14px}
+/* progress */
+.lvbar{display:grid;grid-template-columns:52px 1fr 60px;gap:10px;align-items:center;font-size:14px}
+.lvbar .seg{display:flex;height:12px;gap:2px;border-radius:6px;overflow:hidden;background:var(--line-2)}
+.lvbar .seg i{display:block;height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.days{display:flex;gap:4px}
+.days i{flex:1;aspect-ratio:1;border-radius:4px;background:var(--line-2);display:block}
+.days i.d1{background:var(--stage-1)}.days i.d2{background:var(--stage-2)}.days i.d3{background:var(--stage-3)}
+.stat{display:grid;gap:2px}
+.stat b{font-family:var(--display);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.stat span{font-size:12px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2)}
+.setrow:last-child{border-bottom:0}
+.setrow label{font-weight:500}
+.setrow .sub{font-size:13px;color:var(--ink-2)}
+.setrow select,.setrow input[type=number]{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);min-width:90px}
+.switch{position:relative;width:44px;height:26px;border-radius:13px;background:var(--line);border:0;flex:none;transition:background .2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch.on{background:var(--good)}
+.switch.on::after{left:21px}
+textarea.data{width:100%;min-height:110px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-family:ui-monospace,monospace;font-size:12px}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:999px;font-size:14px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+#toast.show{opacity:1}
+.fade-in{animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.pop{animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.kbd{font-size:11px;color:var(--ink-3)}
+.ladder{display:grid;gap:6px;font-size:14px}
+.ladder div{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center}
+.ladder i{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;font-style:normal;color:var(--accent-ink);background:var(--accent)}
+</style>
+
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="zi">流</span><span>Hanzi Flow</span></div>
+  <div class="chips" id="chips"></div>
+  <button class="iconbtn" id="btn-settings" aria-label="Settings" title="Settings"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+</div></header>
+<main id="screen" class="wrap"></main>
+<nav class="tabs" aria-label="Sections"><div class="inner" id="tabs"></div></nav>
+<div id="toast" role="status"></div>
+
+<script src="data/vocab.js"></script>
+<script src="data/chars.js"></script>
+<script src="data/sentences.js"></script>
+<script src="vendor/hanzi-writer.min.js"></script>
+<script>
+(function(){
+'use strict';
+/* ---------------- data ---------------- */
+const DAY=86400000, MIN=60000;
+const V=window.CF_VOCAB||[];
+const W=V.map((r,i)=>({id:i,s:r[0],t:r[1],p:r[2],y:r[3],m:r[4],l:r[5],pos:r[6]||'',cl:r[7]||''}));
+const BY=new Map(W.map(w=>[w.s,w]));
+const CH=window.CF_CHARS||{};
+const SENT=window.CF_SENTENCES||[];
+const SENT_BY=new Map();
+SENT.forEach((s,i)=>{for(const w of s[4]){if(!SENT_BY.has(w))SENT_BY.set(w,[]);SENT_BY.get(w).push(i);}});
+const LEVELS=[1,2,3,4,5,6];
+const BY_LEVEL={};LEVELS.forEach(l=>BY_LEVEL[l]=W.filter(w=>w.l===l));
+const STAGES=['New','Meaning','Sound','Listening','Recall','Produce','Writing','Mastered'];
+const STAGE_HELP=['Not started yet','Pick the meaning when you see it','Pick the pronunciation when you see it','Pick the word when you hear it','Type the pinyin with tones from the characters','Type the pinyin from the English','Draw the characters from memory','Mixed review at long intervals'];
+const RANKS=[[0,'童生','Tóngshēng','Student'],[400,'秀才','Xiùcai','Flourishing Talent'],[1500,'举人','Jǔrén','Recommended Scholar'],[4000,'贡士','Gòngshì','Tribute Scholar'],[9000,'进士','Jìnshì','Presented Scholar'],[18000,'探花','Tànhuā','Third Place'],[30000,'榜眼','Bǎngyǎn','Second Place'],[50000,'状元','Zhuàngyuan','Top Graduate']];
+const POS={a:'adjective',ad:'adverbial adj.',an:'adj./noun',b:'attributive',c:'conjunction',d:'adverb',e:'interjection',f:'locality',g:'morpheme',h:'prefix',i:'idiom',j:'abbreviation',k:'suffix',l:'fixed phrase',m:'numeral',n:'noun',ng:'noun morpheme',nr:'name',ns:'place name',nt:'organization',nz:'proper noun',o:'onomatopoeia',p:'preposition',q:'measure word',r:'pronoun',s:'place',t:'time word',u:'particle',v:'verb',vd:'verb (adverbial)',vn:'verb/noun',w:'punctuation',x:'other',y:'modal particle',z:'descriptive'};
+
+/* ---------------- helpers ---------------- */
+const $=(s,r=document)=>r.querySelector(s);
+function h(tag,attrs,...kids){const el=document.createElement(tag);if(attrs)for(const[k,v]of Object.entries(attrs)){if(v==null||v===false)continue;if(k==='class')el.className=v;else if(k==='html')el.innerHTML=v;else if(k.startsWith('on'))el.addEventListener(k.slice(2),v);else if(k==='style')el.style.cssText=v;else el.setAttribute(k,v===true?'':v);}for(const kid of kids.flat(Infinity)){if(kid==null||kid===false)continue;el.append(kid.nodeType?kid:document.createTextNode(String(kid)));}return el;}
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const todayKey=(d=new Date())=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const dayShift=n=>{const d=new Date();d.setDate(d.getDate()+n);return todayKey(d);};
+const fuzz=ms=>ms*(0.92+Math.random()*0.16);
+const ICON={speaker:'<svg class="i" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',close:'<svg class="i" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',check:'<svg class="i" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg>',flame:'<svg class="i" viewBox="0 0 24 24"><path d="M12 22c4.4 0 7-2.8 7-7 0-3-2-5.5-3.5-7-.5 2-1.5 3-2.5 3.5 0-3-1.5-6-4-8 .5 3-1 4.5-2.5 6.5S5 13 5 15c0 4.2 2.6 7 7 7z"/></svg>',back:'<svg class="i" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',play:'<svg class="i" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></svg>'};
+function fmtDue(ms){const d=ms-Date.now();if(d<=0)return 'now';if(d<MIN*60)return Math.max(1,Math.round(d/MIN))+' min';if(d<DAY)return Math.round(d/3600000)+' h';return Math.round(d/DAY)+' d';}
+function posText(w){return w.pos.split(',').filter(Boolean).map(p=>POS[p]||p).slice(0,2).join(', ');}
+
+/* ---------------- pinyin ---------------- */
+const MARKS={a:'āáǎà',e:'ēéěè',i:'īíǐì',o:'ōóǒò',u:'ūúǔù','ü':'ǖǘǚǜ'};
+const TONED={};for(const[v,s]of Object.entries(MARKS))[...s].forEach((c,i)=>TONED[c]={v,t:i+1});
+function markIndex(b){if(b.includes('a'))return b.indexOf('a');if(b.includes('e'))return b.indexOf('e');if(b.includes('ou'))return b.indexOf('o');for(let i=b.length-1;i>=0;i--)if('aeiouü'.includes(b[i]))return i;return -1;}
+function mark(b,t){if(!t||t===5)return b;const i=markIndex(b);if(i<0)return b;return b.slice(0,i)+MARKS[b[i]][t-1]+b.slice(i+1);}
+function pyEl(y,cls){return h('span',{class:'py '+(cls||'')},y.flatMap(([b,t],i)=>[i?' ':null,h('span',{class:'t'+t},mark(b,t))]));}
+function pyText(y){return y.map(([b,t])=>mark(b,t)).join(' ');}
+function normPinyinInput(str){let s=str.toLowerCase().trim().replace(/u:/g,'ü').replace(/v/g,'ü').replace(/[\s'’\-·.,，。]/g,'');let out='';for(const ch of s){const m=TONED[ch];out+=m?m.v+m.t:ch;}return out;}
+function checkPinyin(input,y){const s=normPinyinInput(input);const bases=s.replace(/[0-5]/g,'');const want=y.map(x=>x[0]).join('');if(!bases||bases!==want)return 'wrong';const typed=[...s.matchAll(/[1-5]/g)].map(m=>+m[0]).filter(t=>t!==5);const need=y.map(x=>x[1]).filter(t=>t!==5);if(!typed.length&&need.length)return 'toneless';if(typed.length===need.length&&typed.every((t,i)=>t===need[i]))return 'good';return 'tones';}
+function toneVariants(w,n){const key=s=>s.map(x=>x[1]).join('');const out=new Map();const orig=key(w.y);let g=0;const tonal=w.y.map((x,i)=>x[1]!==5?i:-1).filter(i=>i>=0);const idxPool=tonal.length?tonal:w.y.map((_,i)=>i);while(out.size<n&&g++<300){const y=w.y.map(([b,t])=>[b,t]);const k=Math.random()<0.6||idxPool.length<2?1:2;for(const i of shuffle(idxPool).slice(0,k)){let t;do{t=1+Math.floor(Math.random()*4);}while(t===y[i][1]);y[i][1]=t;}const kk=key(y);if(kk!==orig)out.set(kk,y);}return[...out.values()];}
+function toneSVG(t){if(t===5)return'<svg class="tone-svg" viewBox="0 0 40 32" aria-hidden="true"><circle cx="20" cy="17" r="3.5" fill="currentColor"/></svg>';const p={1:'M5 7H35',2:'M6 24L34 7',3:'M5 11C11 31 21 31 35 8',4:'M6 6L34 26'}[t];return'<svg class="tone-svg" viewBox="0 0 40 32" aria-hidden="true"><path d="'+p+'" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';}
+
+/* ---------------- state ---------------- */
+const DEFAULTS={newPerDay:6,sessionSize:20,levels:[1],audio:true,autoplay:true,sfx:true,rate:0.85,voice:'',strictTones:false,trad:false,matchPairs:6,matchSide:'pinyin',matchTimer:true,suddenDeath:false,matchLevels:[1],tutorialSeen:false};
+const state={items:{},stats:{xp:0,streak:0,lastDay:'',best:{},days:{},reviews:0,correct:0,settingsAt:0},settings:Object.assign({},DEFAULTS),ui:{screen:'home'}};
+const LS_KEY='hanziflow.v1',LS_SESS='hanziflow.session';
+function loadLocal(){try{const raw=localStorage.getItem(LS_KEY);if(raw){const o=JSON.parse(raw);Object.assign(state.items,o.items||{});Object.assign(state.stats,o.stats||{});Object.assign(state.settings,o.settings||{});}}catch(e){}if(!Array.isArray(state.settings.levels)||!state.settings.levels.length)state.settings.levels=[1];if(!Array.isArray(state.settings.matchLevels)||!state.settings.matchLevels.length)state.settings.matchLevels=state.settings.levels.slice();}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(flushLocal,200);}
+function flushLocal(){clearTimeout(saveT);saveT=null;try{localStorage.setItem(LS_KEY,JSON.stringify({v:1,items:state.items,stats:state.stats,settings:state.settings}));}catch(e){}cloud.scheduleWrite();}
+function setSetting(k,v){state.settings[k]=v;state.stats.settingsAt=Date.now();cloud.dirty.add('meta');save();}
+function dayRec(k=todayKey()){const d=state.stats.days;if(!d[k])d[k]={n:0,r:0,c:0,x:0};return d[k];}
+function addXP(n){state.stats.xp+=n;dayRec().x+=n;cloud.dirty.add('meta');}
+function touchStreak(){const t=todayKey();const s=state.stats;if(s.lastDay===t)return;s.streak=(s.lastDay===dayShift(-1))?s.streak+1:1;s.lastDay=t;cloud.dirty.add('meta');}
+function rankFor(xp){let r=RANKS[0],next=null;for(let i=0;i<RANKS.length;i++){if(xp>=RANKS[i][0]){r=RANKS[i];next=RANKS[i+1]||null;}}return{r,next};}
+
+/* ---------------- cloud sync (optional, claude.ai viewer only) ---------------- */
+const cloud={db:null,uid:null,ready:false,dirty:new Set(),writing:false,timer:null,
+  async init(){try{if(!window.claude||typeof window.claude.use!=='function')return;const[db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]);if(!db||!user)return;const uid=await user.id();if(!uid)return;this.db=db;this.uid=uid;await this.pull();this.ready=true;if(this.dirty.size)this.scheduleWrite();}catch(e){console.warn('sync unavailable',e);}},
+  doc(name){return this.db.doc('data/users/'+this.uid+'/'+name);},
+  async pull(){const names=['meta','l1','l2','l3','l4','l5','l6'];const snaps=await Promise.all(names.map(n=>this.doc(n).get()));let changed=false;const meta=snaps[0].exists?snaps[0].data():null;if(meta){changed=mergeStats(meta)||changed;}else this.dirty.add('meta');for(let l=1;l<=6;l++){const snap=snaps[l];const remote=snap.exists?(snap.data().items||{}):{};const local={};for(const[k,v]of Object.entries(state.items)){const w=BY.get(k);if(w&&w.l===l)local[k]=v;}let localNewer=false;for(const[k,v]of Object.entries(remote)){const cur=state.items[k];if(!cur||(v.n||0)>(cur.n||0)){state.items[k]=v;changed=true;}else if(cur&&(cur.n||0)>(v.n||0))localNewer=true;}for(const k of Object.keys(local))if(!remote[k])localNewer=true;if(localNewer)this.dirty.add('l'+l);}if(changed){save();render();}},
+  payload(name){if(name==='meta')return{stats:state.stats,settings:state.settings,v:1};const l=+name.slice(1);const items={};for(const[k,v]of Object.entries(state.items)){const w=BY.get(k);if(w&&w.l===l)items[k]=v;}return{items,v:1};},
+  scheduleWrite(){if(!this.ready)return;clearTimeout(this.timer);this.timer=setTimeout(()=>this.flush(),1500);},
+  async flush(){if(this.writing||!this.ready)return;this.writing=true;try{while(this.dirty.size){const name=this.dirty.values().next().value;this.dirty.delete(name);await this.doc(name).set(this.payload(name));}}catch(e){console.warn('sync write failed',e);}finally{this.writing=false;if(this.dirty.size)this.scheduleWrite();}}
+};
+function mergeStats(meta){let changed=false;const r=meta.stats||{};const s=state.stats;if((r.xp||0)>s.xp){s.xp=r.xp;changed=true;}if((r.reviews||0)>s.reviews){s.reviews=r.reviews;changed=true;}if((r.correct||0)>s.correct){s.correct=r.correct;changed=true;}if((r.lastDay||'')>(s.lastDay||'')||((r.lastDay||'')===(s.lastDay||'')&&(r.streak||0)>s.streak)){s.streak=r.streak||0;s.lastDay=r.lastDay||'';changed=true;}for(const[k,v]of Object.entries(r.best||{}))if((v||0)>(s.best[k]||0)){s.best[k]=v;changed=true;}for(const[k,v]of Object.entries(r.days||{})){const d=s.days[k]||(s.days[k]={n:0,r:0,c:0,x:0});for(const f of['n','r','c','x'])if((v[f]||0)>d[f]){d[f]=v[f];changed=true;}}if(meta.settings&&(r.settingsAt||0)>(s.settingsAt||0)){Object.assign(state.settings,meta.settings);s.settingsAt=r.settingsAt;changed=true;}return changed;}
+
+/* ---------------- audio ---------------- */
+const audio={voices:[],voice:null,ctx:null,
+  init(){if(!('speechSynthesis'in window))return;const load=()=>{try{this.voices=speechSynthesis.getVoices().filter(v=>/^zh|^cmn|chinese|mandarin/i.test(v.lang+' '+v.name));}catch(e){this.voices=[];}this.pick();};load();try{speechSynthesis.addEventListener('voiceschanged',load);}catch(e){}},
+  pick(){const want=state.settings.voice;this.voice=this.voices.find(v=>v.voiceURI===want)||this.voices.find(v=>/zh[-_]CN|cmn[-_]Hans|cmn[-_]CN/i.test(v.lang))||this.voices.find(v=>/zh[-_]TW|cmn[-_]Hant/i.test(v.lang))||this.voices.find(v=>!/HK|yue/i.test(v.lang))||this.voices[0]||null;},
+  get available(){return !!this.voice&&state.settings.audio;},
+  speak(text,rate){if(!this.available)return false;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=this.voice;u.lang=this.voice.lang||'zh-CN';u.rate=rate||state.settings.rate;u.pitch=1;speechSynthesis.speak(u);return true;}catch(e){return false;}},
+  sfx(kind){if(!state.settings.sfx)return;try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=this.ctx||new AC();const c=this.ctx;if(c.state==='suspended')c.resume();const t=c.currentTime;const seq={good:[523.25,783.99],perfect:[523.25,659.25,783.99,1046.5],almost:[440,440],bad:[220,165],tick:[880],start:[392,523.25,659.25]}[kind]||[440];seq.forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.type=kind==='bad'?'triangle':'sine';o.frequency.value=f;const s=t+i*0.075;g.gain.setValueAtTime(0.0001,s);g.gain.exponentialRampToValueAtTime(0.09,s+0.012);g.gain.exponentialRampToValueAtTime(0.0001,s+0.19);o.connect(g).connect(c.destination);o.start(s);o.stop(s+0.2);});}catch(e){}}
+};
+
+/* ---------------- SRS ---------------- */
+function rec(w){return state.items[w.s];}
+function newRec(now){return{s:0,e:2.5,i:0,d:now,r:0,l:0,n:now,k:0};}
+function grade(w,outcome,perfect){const now=Date.now();const it=state.items[w.s]||(state.items[w.s]=newRec(now));it.n=now;it.r++;
+  if(outcome==='again'){it.l++;it.e=Math.max(1.3,it.e-0.2);it.i=0;it.k=1;it.s=Math.max(1,it.s-1);it.d=now+10*MIN;}
+  else if(outcome==='almost'){it.i=it.i?Math.max(1,it.i*0.5):0;it.k=Math.max(it.k||0,1);it.d=now+10*MIN;}
+  else{if(it.i===0){if((it.k||0)<1){it.k=1;it.d=now+10*MIN;}else{it.i=1;it.k=0;it.d=now+fuzz(DAY);}}else{it.i=it.i<1.5?3:Math.min(180,it.i*it.e);if(perfect)it.e=Math.min(3,it.e+0.05);it.d=now+fuzz(it.i*DAY);}it.s=Math.min(7,it.s+1);}
+  cloud.dirty.add('l'+w.l);state.stats.reviews++;if(outcome==='good')state.stats.correct++;const d=dayRec();d.r++;if(outcome==='good')d.c++;touchStreak();return it;}
+function introduce(w,known){const now=Date.now();state.items[w.s]=known?{s:4,e:2.5,i:3,d:now+fuzz(3*DAY),r:1,l:0,n:now,k:0}:{s:1,e:2.5,i:0,d:now,r:0,l:0,n:now,k:0};dayRec().n++;cloud.dirty.add('l'+w.l);touchStreak();addXP(5);}
+function markKnown(w){const now=Date.now();const it=state.items[w.s]||(state.items[w.s]=newRec(now));it.s=7;it.i=30;it.d=now+fuzz(30*DAY);it.n=now;it.k=0;cloud.dirty.add('l'+w.l);save();}
+function resetWord(w){delete state.items[w.s];cloud.dirty.add('l'+w.l);save();}
+function dueWords(now=Date.now()){return W.filter(w=>{const it=state.items[w.s];return it&&it.s>0&&it.d<=now;}).sort((a,b)=>state.items[a.s].d-state.items[b.s].d);}
+function newAllowance(){return Math.max(0,state.settings.newPerDay-(dayRec().n||0));}
+function freshWords(n,levels){const out=[];for(const l of LEVELS){if(!levels.includes(l))continue;for(const w of BY_LEVEL[l]){if(out.length>=n)break;if(!state.items[w.s])out.push(w);}if(out.length>=n)break;}return out;}
+function canWrite(w){return w.s.length<=3&&[...w.s].every(c=>CH[c]&&CH[c][5]>=1);}
+const strokeLoads={};
+function ensureStrokes(chars){const lv=new Set();for(const c of chars){const info=CH[c];if(info&&info[5]>=1)lv.add(info[5]);}return Promise.all([...lv].map(l=>{if(window.CF_STROKES_LOADED&&window.CF_STROKES_LOADED[l])return;if(!strokeLoads[l])strokeLoads[l]=new Promise((res,rej)=>{const s=document.createElement('script');s.src='data/strokes-'+l+'.js';s.onload=res;s.onerror=()=>{delete strokeLoads[l];rej(new Error('strokes '+l));};document.head.appendChild(s);});return strokeLoads[l];}));}
+function hasStrokes(ch){return !!(window.CF_STROKES&&window.CF_STROKES[ch]);}
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||'#888';}
+function makeWriter(el,ch,opts){if(!window.HanziWriter||!hasStrokes(ch))return null;const size=opts.size||240;return HanziWriter.create(el,ch,Object.assign({width:size,height:size,padding:Math.round(size*0.08),showOutline:!!opts.outline,showCharacter:!!opts.showCharacter,strokeColor:cssVar('--ink'),outlineColor:cssVar('--line'),drawingColor:cssVar('--accent'),highlightColor:cssVar('--good'),drawingWidth:Math.max(8,Math.round(size/18)),strokeAnimationSpeed:1,delayBetweenStrokes:220,showHintAfterMisses:opts.hintAfter==null?2:opts.hintAfter,highlightOnComplete:true,charDataLoader:(c,onLoad,onError)=>{const d=window.CF_STROKES&&window.CF_STROKES[c];d?onLoad(d):onError(new Error('no stroke data'));}},opts.extra||{}));}
+
+/* ---------------- distractors ---------------- */
+function distractors(w,n,kind){const pool=BY_LEVEL[w.l].filter(x=>x!==w);let cands=[];if(kind==='hanzi'){const bases=new Set(w.y.map(s=>s[0]));const tones=w.y.map(s=>s[1]).join('');const sim=pool.filter(x=>x.s.length===w.s.length&&(x.y.some(s=>bases.has(s[0]))||x.y.map(s=>s[1]).join('')===tones));const shared=pool.filter(x=>[...x.s].some(c=>w.s.includes(c)));cands=shuffle(sim).concat(shuffle(shared),shuffle(pool.filter(x=>x.s.length===w.s.length)),shuffle(pool));}else if(kind==='meaning'){const pos=w.pos.split(',')[0];cands=shuffle(pool.filter(x=>pos&&x.pos.split(',')[0]===pos)).concat(shuffle(pool));}else{cands=shuffle(pool.filter(x=>x.y.length===w.y.length)).concat(shuffle(pool));}
+  const out=[],seen=new Set([w.s]),seenM=new Set([w.m[0]]),seenP=new Set([w.p]);const take=x=>{if(seen.has(x.s)||seenM.has(x.m[0])||(kind==='pinyin'&&seenP.has(x.p)))return;seen.add(x.s);seenM.add(x.m[0]);seenP.add(x.p);out.push(x);};for(const x of cands){if(out.length>=n)break;take(x);}if(out.length<n)for(const x of shuffle(W)){if(out.length>=n)break;take(x);}return out;}
+
+/* ---------------- UI plumbing ---------------- */
+const screenEl=$('#screen');let cleanups=[];
+function onLeave(fn){cleanups.push(fn);}
+function clearScreen(){for(const f of cleanups){try{f();}catch(e){}}cleanups=[];screenEl.innerHTML='';window.scrollTo(0,0);}
+let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+const TABS=[['home','今','Today'],['play','玩','Play'],['words','词','Words'],['me','我','Me']];
+function renderTabs(){const el=$('#tabs');el.innerHTML='';for(const[id,zi,label]of TABS)el.append(h('button',{class:'tab'+(state.ui.screen===id||(state.ui.screen==='flow'&&id==='home')?' active':''),onclick:()=>go(id)},h('span',{class:'zi'},zi),label));}
+function renderChips(){const el=$('#chips');el.innerHTML='';const{r}=rankFor(state.stats.xp);el.append(h('span',{class:'chip',title:r[3]},h('span',{class:'zi'},r[1]),h('b',{class:'tnum'},state.stats.xp),' xp'));if(state.stats.streak>0&&(state.stats.lastDay===todayKey()||state.stats.lastDay===dayShift(-1)))el.append(h('span',{class:'chip',title:'Day streak',html:ICON.flame+'<b>'+state.stats.streak+'</b>'}));}
+const SCREENS={};
+function go(name,params){state.ui.screen=name;state.ui.params=params||null;render();}
+function render(){clearScreen();renderTabs();renderChips();const fn=SCREENS[state.ui.screen]||SCREENS.home;fn(state.ui.params||{});}
+function levelChips(selected,onChange,{multi=true}={}){const wrap=h('div',{class:'filters'});for(const l of LEVELS){const b=h('button',{class:'fchip'+(selected.includes(l)?' active':''),onclick:()=>{let next;if(multi){next=selected.includes(l)?selected.filter(x=>x!==l):selected.concat(l).sort();if(!next.length)next=[l];}else next=[l];onChange(next);}},'HSK '+l);wrap.append(b);}return wrap;}
+function switchEl(on,onToggle){const b=h('button',{class:'switch'+(on?' on':''),role:'switch','aria-checked':on?'true':'false'});b.addEventListener('click',()=>{on=!on;b.classList.toggle('on',on);b.setAttribute('aria-checked',on?'true':'false');onToggle(on);});return b;}
+function speakBtn(text,cls){return h('button',{class:'iconbtn '+(cls||''),'aria-label':'Hear it',title:'Hear it',html:ICON.speaker,onclick:e=>{e.stopPropagation();if(!audio.speak(text))toast('No Chinese voice available on this device');}});}
+function stagePill(w){const it=rec(w);const s=it?it.s:0;const col=s===0?'var(--line)':s<=3?'var(--stage-1)':s<=6?'var(--stage-2)':'var(--stage-3)';return h('span',{class:'stagepill'},h('i',{style:'background:'+col}),STAGES[s]);}
+function sentencesFor(w,n=3){const idx=SENT_BY.get(w.s)||[];return idx.slice().sort((a,b)=>SENT[a][3]-SENT[b][3]||SENT[a][0].length-SENT[b][0].length).slice(0,n).map(i=>SENT[i]);}
+function sentEl(s,hl){const zh=h('div',{class:'zh'});if(hl&&s[0].includes(hl)){const parts=s[0].split(hl);parts.forEach((p,i)=>{if(i)zh.append(h('mark',null,hl));zh.append(p);});}else zh.textContent=s[0];return h('div',{class:'sent',title:'Tap to hear',onclick:()=>{if(!audio.speak(s[0],0.9))toast('No Chinese voice available on this device');}},zh,h('div',{class:'pyl'},s[1]),h('div',{class:'en'},s[2]));}
+function wordLink(w){return h('button',{class:'btn sm ghost',onclick:()=>openSheet(w)},h('span',{class:'hz'},w.s),' ',pyEl(w.y));}
+
+/* ---------------- HOME ---------------- */
+SCREENS.home=function(){const S=state.settings;const due=dueWords();const allow=newAllowance();const learning=W.filter(w=>{const it=rec(w);return it&&it.s>0&&it.s<7;}).length;const mastered=W.filter(w=>{const it=rec(w);return it&&it.s>=7;}).length;const{r,next}=rankFor(state.stats.xp);const pct=next?Math.round(100*(state.stats.xp-r[0])/(next[0]-r[0])):100;
+  const root=h('div',{class:'stack fade-in'});
+  root.append(h('div',{class:'card hero'},h('div',{class:'rank'},h('div',{class:'zi'},r[1]),h('div',{class:'grow'},h('div',{class:'label'},'Your rank'),h('h2',null,r[2],' · ',r[3]),h('div',{class:'small muted'},next?(next[0]-state.stats.xp)+' xp to '+next[1]+' '+next[2]:'Highest rank reached'))),h('div',{class:'bar'},h('i',{style:'width:'+pct+'%'})),h('div',{class:'row',style:'gap:22px'},h('div',{class:'stat'},h('b',null,due.length),h('span',null,'due now')),h('div',{class:'stat'},h('b',null,learning),h('span',null,'learning')),h('div',{class:'stat'},h('b',null,mastered),h('span',null,'mastered')),h('div',{class:'stat'},h('b',null,state.stats.streak),h('span',null,'day streak')))));
+  const resume=loadSession();
+  if(resume){root.append(h('button',{class:'bigcta',onclick:()=>{session=resume;go('flow');}},h('div',null,h('div',{class:'t'},'Resume session'),h('div',{class:'s'},resume.queue.length+' cards left')),h('span',{class:'zi'},'续')));}
+  const newN=Math.min(allow,due.length>S.sessionSize?2:Math.max(0,S.sessionSize-Math.min(due.length,S.sessionSize)));
+  if(due.length||newN){root.append(h('button',{class:'bigcta',onclick:()=>startSession({}),},h('div',null,h('div',{class:'t'},'Start Flow session'),h('div',{class:'s'},[due.length?due.length+' review'+(due.length===1?'':'s'):null,newN?newN+' new word'+(newN===1?'':'s'):null].filter(Boolean).join(' · ')||'Quick review')),h('span',{class:'zi'},'流')));}
+  else{root.append(h('div',{class:'card soft'},h('h3',null,'All caught up'),h('p',{class:'muted',style:'margin:6px 0 12px'},'Nothing is due right now. The next review lands in ',nextDueText(),'. Learn a few extra words, or play to keep the characters warm.'),h('div',{class:'row'},h('button',{class:'btn primary',onclick:()=>startSession({extraNew:5})},'Learn 5 more words'),h('button',{class:'btn',onclick:()=>go('play',{mode:'match'})},'Play Match'))));}
+  root.append(h('div',null,h('div',{class:'label',style:'margin-bottom:8px'},'Quick drills'),h('div',{class:'grid4'},tileBtn('配','Match','Pair 汉字 with pinyin or meaning against the clock',()=>go('play',{mode:'match'})),tileBtn('声','Tones','Hear a word, pick its tone pattern',()=>go('play',{mode:'tones'})),tileBtn('听','Listen','Hear a word, pick the characters',()=>go('play',{mode:'listen'})),tileBtn('写','Write','Draw characters from memory',()=>go('play',{mode:'write'})))));
+  if(!S.tutorialSeen){root.append(h('div',{class:'card'},h('div',{class:'row',style:'justify-content:space-between'},h('h3',null,'How Hanzi Flow teaches'),h('button',{class:'btn sm ghost',onclick:()=>{setSetting('tutorialSeen',true);render();}},'Got it')),h('p',{class:'muted',style:'margin:8px 0 12px;max-width:62ch'},'Every word climbs a 7-rung ladder. Each rung is a harder test, from recognizing to recalling to writing. Get it right and the word moves up and comes back later. Miss it and it drops a rung and comes back soon. Short daily Flow sessions do the scheduling. Match and the drills are for extra reps and fun.'),h('div',{class:'ladder'},STAGES.slice(1).map((s,i)=>h('div',null,h('i',null,i+1),h('span',null,h('b',null,s),' · ',h('span',{class:'muted'},STAGE_HELP[i+1]))))),h('p',{class:'small faint',style:'margin:12px 0 0'},'Tip: tones are part of the answer. When typing pinyin, add tone numbers (ni3 hao3) and write ü as v.')));}
+  const learnedToday=dayRec().n,revToday=dayRec().r;
+  if(learnedToday||revToday)root.append(h('div',{class:'small muted'},'Today: '+revToday+' answers · '+learnedToday+' new words · '+dayRec().x+' xp'));
+  screenEl.append(root);};
+function tileBtn(zi,title,desc,onclick){return h('button',{class:'tilebtn',onclick},h('span',{class:'zi'},zi),h('b',null,title),h('span',null,desc));}
+function nextDueText(){const its=Object.values(state.items).filter(i=>i.s>0&&i.s<7||i.s===7);if(!its.length)return 'a while';const m=Math.min(...its.map(i=>i.d));return fmtDue(m);}
+
+/* ---------------- FLOW SESSION ---------------- */
+let session=null;
+function buildQueue({extraNew=0}){const S=state.settings;const due=dueWords();const reviews=due.slice(0,S.sessionSize);let allowance=newAllowance()+extraNew;if(due.length>S.sessionSize)allowance=Math.min(allowance,2);else allowance=Math.min(allowance,Math.max(extraNew,S.sessionSize-reviews.length));const fresh=freshWords(allowance,S.levels);const q=[];let fi=0;reviews.forEach((w,i)=>{q.push({k:w.s,kind:'task'});if(i%2===1&&fi<fresh.length)q.push({k:fresh[fi++].s,kind:'intro'});});while(fi<fresh.length)q.push({k:fresh[fi++].s,kind:'intro'});return q;}
+function startSession(opts){const q=buildQueue(opts);if(!q.length){toast('Nothing to study right now. Add a level or raise new words per day in Me.');return;}session={queue:q,total:q.length,done:0,xp:0,correct:0,answered:0,newWords:[],missed:[],recent:[],sinceBoard:0,startedAt:Date.now(),xpStart:state.stats.xp};saveSession();audio.sfx('start');go('flow');}
+function saveSession(){try{if(session)localStorage.setItem(LS_SESS,JSON.stringify(Object.assign({},session,{savedAt:Date.now()})));else localStorage.removeItem(LS_SESS);}catch(e){}}
+function loadSession(){try{const raw=localStorage.getItem(LS_SESS);if(!raw)return null;const s=JSON.parse(raw);if(Date.now()-s.savedAt>3*3600000||!s.queue||!s.queue.length){localStorage.removeItem(LS_SESS);return null;}return s;}catch(e){return null;}}
+function endSession(){session=null;saveSession();}
+SCREENS.flow=function(){if(!session){go('home');return;}flowTop();nextCard();};
+function flowTop(){const top=h('div',{class:'sess-top'},h('button',{class:'iconbtn','aria-label':'Quit session',html:ICON.close,onclick:()=>{if(confirmQuit.hidden)confirmQuit.hidden=false;}}),h('div',{class:'bar'},h('i',{id:'sess-bar',style:'width:'+Math.round(100*session.done/Math.max(1,session.total))+'%'})),h('span',{class:'chip tnum',id:'sess-xp'},'+'+(state.stats.xp-session.xpStart)+' xp'));const confirmQuit=h('div',{class:'card soft row',hidden:true,style:'margin-bottom:14px;justify-content:space-between'},h('span',null,'Leave now? Your answers so far are saved.'),h('div',{class:'row'},h('button',{class:'btn sm',onclick:()=>{confirmQuit.hidden=true;}},'Keep going'),h('button',{class:'btn sm danger',onclick:()=>{endSession();go('home');}},'Leave')));screenEl.append(top,confirmQuit,h('div',{id:'card'}));}
+function updateTop(){const b=$('#sess-bar');if(b)b.style.width=Math.round(100*session.done/Math.max(1,session.total))+'%';const x=$('#sess-xp');if(x)x.textContent='+'+(state.stats.xp-session.xpStart)+' xp';renderChips();}
+function cardEl(){const c=$('#card');c.innerHTML='';return c;}
+function uniqueLast(arr,n){const out=[];for(let i=arr.length-1;i>=0&&out.length<n;i--){if(!out.includes(arr[i]))out.push(arr[i]);}return out;}
+function nextCard(){if(!session)return;saveSession();updateTop();
+  if(session.sinceBoard>=6&&uniqueLast(session.recent,5).length>=4){session.sinceBoard=0;renderBoardCard(uniqueLast(session.recent,5).map(k=>BY.get(k)));return;}
+  if(!session.queue.length){finishSession();return;}
+  let idx=session.queue.findIndex(e=>!e.due||e.due<=Date.now());if(idx<0)idx=0;const e=session.queue.splice(idx,1)[0];const w=BY.get(e.k);if(!w){nextCard();return;}session.current=e;if(e.kind==='intro')renderIntro(w);else renderTask(w);}
+function requeue(w,outcome){const it=rec(w);if(it&&it.d-Date.now()<20*MIN){const pos=Math.min(session.queue.length,outcome==='good'?4:3);session.queue.splice(pos,0,{k:w.s,kind:'task',due:it.d});session.total++;}}
+function afterAnswer(w,outcome,perfect){grade(w,outcome,perfect);session.answered++;if(outcome==='good')session.correct++;else if(!session.missed.includes(w.s))session.missed.push(w.s);session.recent.push(w.s);session.sinceBoard++;session.done++;addXP(outcome==='good'?(perfect?12:10):outcome==='almost'?4:1);requeue(w,outcome);save();updateTop();}
+function finishSession(){const c=cardEl();const acc=session.answered?Math.round(100*session.correct/session.answered):100;const xp=state.stats.xp-session.xpStart;const sealZi=acc>=90?'优':acc>=70?'良':'中';const seal=h('div',{class:'seal'},sealZi);const mins=Math.max(1,Math.round((Date.now()-session.startedAt)/60000));
+  const root=h('div',{class:'stack fade-in'},h('div',{class:'card'},h('div',{class:'row',style:'justify-content:space-between;align-items:flex-start'},h('div',null,h('div',{class:'label'},'Session complete'),h('h1',null,acc>=90?'Excellent flow':acc>=70?'Good work':'Keep at it')),seal),h('div',{class:'row',style:'gap:22px;margin-top:14px'},h('div',{class:'stat'},h('b',null,session.answered),h('span',null,'answers')),h('div',{class:'stat'},h('b',null,acc+'%'),h('span',null,'accuracy')),h('div',{class:'stat'},h('b',null,'+'+xp),h('span',null,'xp')),h('div',{class:'stat'},h('b',null,mins),h('span',null,'min')))));
+  if(session.newWords.length)root.append(h('div',{class:'card'},h('h3',null,'New today'),h('div',{class:'row',style:'margin-top:8px'},session.newWords.map(k=>wordLink(BY.get(k))))));
+  if(session.missed.length)root.append(h('div',{class:'card'},h('h3',null,'Worth another look'),h('p',{class:'small muted',style:'margin:4px 0 8px'},'These come back within minutes or tomorrow.'),h('div',{class:'row'},session.missed.map(k=>wordLink(BY.get(k))))));
+  const more=dueWords().length;root.append(h('div',{class:'row'},more?h('button',{class:'btn primary',onclick:()=>{endSession();startSession({});}},'Another round ('+more+' due)'):h('button',{class:'btn primary',onclick:()=>{endSession();startSession({extraNew:5});}},'Learn 5 more'),h('button',{class:'btn',onclick:()=>{endSession();go('home');}},'Done')));
+  c.append(root);audio.sfx(acc>=90?'perfect':'good');endSession();}
+
+function renderIntro(w){const c=cardEl();const card=h('div',{class:'card intro fade-in'});const big=h('div',{class:'writers'});const head=h('div',{class:'head'},big,h('div',null,h('div',{class:'label'},'New word · HSK '+w.l),pyEl(w.y,'py-big'),h('div',{class:'small muted'},posText(w))));
+  head.querySelector('.py').style.fontSize='28px';
+  const meanings=h('ol',{class:'meanings'},w.m.map(m=>h('li',null,m)));
+  const bd=breakdownEl(w);const sents=sentencesFor(w,1).map(s=>sentEl(s,w.s));
+  card.append(head,meanings,...(w.t?[h('div',{class:'small muted'},'Traditional: ',h('span',{class:'hz'},w.t))]:[]),bd,...sents,h('div',{class:'row',style:'margin-top:4px'},h('button',{class:'btn primary grow',onclick:()=>{introduce(w,false);session.newWords.push(w.s);session.done++;session.queue.splice(Math.min(session.queue.length,2),0,{k:w.s,kind:'task',due:rec(w).d});session.total++;save();nextCard();}},'Got it, quiz me'),speakBtn(w.s),h('button',{class:'btn ghost',onclick:()=>{introduce(w,true);session.done++;save();toast('Marked as known. It will still show up for review.');nextCard();}},'Already know it')));
+  c.append(card);renderBigHanzi(big,w,true);if(state.settings.autoplay)setTimeout(()=>audio.speak(w.s),250);}
+function renderBigHanzi(container,w,animate){container.innerHTML='';const chars=[...w.s];const size=chars.length>=3?88:chars.length===2?116:150;const writers=[];const draw=()=>{for(const ch of chars){const box=h('div',{class:'tzg',style:'width:'+size+'px;border-width:1px'});container.append(box);const wr=makeWriter(box,ch,{size,showCharacter:true,hintAfter:99});if(wr)writers.push(wr);else{box.classList.remove('tzg');box.className='hz-big';box.style.width='';box.textContent=ch;}}
+    if(animate&&writers.length){let i=0;const step=()=>{if(i>=writers.length||!container.isConnected)return;writers[i].animateCharacter({onComplete:()=>{i++;setTimeout(step,250);}});};setTimeout(step,500);}
+    container.onclick=()=>{let i=0;const step=()=>{if(i>=writers.length)return;writers[i].hideCharacter();writers[i].animateCharacter({onComplete:()=>{i++;setTimeout(step,200);}});};step();};container.title='Tap to replay stroke order';};
+  if(chars.every(hasStrokes))draw();else{container.append(h('div',{class:'hz-big'},w.s));ensureStrokes(chars).then(()=>{if(container.isConnected&&chars.every(hasStrokes))draw();}).catch(()=>{});}}
+function breakdownEl(w){const chars=[...new Set([...w.s])].filter(c=>CH[c]);if(!chars.length||(chars.length===1&&!CH[chars[0]][3]&&w.s.length===1))return h('div');return h('div',{class:'breakdown'},chars.map(c=>{const info=CH[c];const comp=info[2]?[...info[2]].filter(x=>CH[x]&&x!==c&&CH[x][0]).slice(0,3):[];return h('div',{class:'ch'},h('div',{class:'zi'},c),h('div',null,h('div',{class:'def'},info[1]?h('span',{class:'py muted small'},info[1]+' · '):null,info[0]||'—'),info[3]?h('div',{class:'hint'},info[3]):null,comp.length?h('div',{class:'hint'},'Parts: ',comp.map((x,i)=>[i?' · ':null,h('span',{class:'hz'},x),' ',CH[x][0].split(/[;,]/)[0]])):null));}));}
+
+function taskKind(w){const it=rec(w);let s=it?it.s:1;if(s>=7)s=rnd([3,4,5,6]);if(s<=0)s=1;if(s===6&&!canWrite(w))s=5;return s;}
+function renderTask(w){const kind=taskKind(w);if(kind===6){const c=cardEl();c.append(h('div',{class:'card faint'},'Loading stroke data…'));ensureStrokes([...w.s]).then(()=>{if(session&&session.current&&session.current.k===w.s)renderWrite(w,{inFlow:true});}).catch(()=>renderType(w,{fromEnglish:true}));return;}
+  if(kind===1)renderMC(w,{prompt:'hanzi',answer:'meaning',q:'What does it mean?'});
+  else if(kind===2)renderMC(w,{prompt:'hanzi',answer:'pinyin',q:'How is it pronounced?'});
+  else if(kind===3)renderMC(w,{prompt:audio.available?'audio':'pinyin',answer:'hanzi',q:audio.available?'Which word did you hear?':'Which word is this?'});
+  else if(kind===4)renderType(w,{fromEnglish:false});
+  else renderType(w,{fromEnglish:true});}
+function promptEl(w,mode,q){const p=h('div',{class:'prompt'});p.append(h('div',{class:'q'},q));if(mode==='hanzi')p.append(h('div',{class:'hz-big'},state.settings.trad&&w.t?w.t:w.s));else if(mode==='pinyin')p.append(pyEl(w.y));else if(mode==='meaning')p.append(h('div',{class:'en'},w.m[0]),w.m[1]?h('div',{class:'small muted'},w.m[1]):null,h('div',{class:'small faint'},posText(w)));else if(mode==='audio'){const b=h('button',{class:'btn',style:'font-size:18px;padding:14px 22px',html:ICON.speaker+' Play again',onclick:()=>audio.speak(w.s)});p.append(b);setTimeout(()=>audio.speak(w.s),200);}return p;}
+function optionLabel(x,kind){if(kind==='meaning')return h('span',null,x.m[0]);if(kind==='pinyin')return pyEl(x.y);return h('span',{class:'hz'},x.s);}
+function renderMC(w,{prompt,answer,q}){const c=cardEl();const n=3;let opts;if(answer==='pinyin'){const tv=toneVariants(w,2).map(y=>({y,s:'\u0000'+pyText(y),m:[''],p:pyText(y),fake:true}));const others=distractors(w,n-tv.length,'pinyin');opts=shuffle([w,...tv,...others]);}else opts=shuffle([w,...distractors(w,n,answer==='meaning'?'meaning':'hanzi')]);
+  const task=h('div',{class:'task fade-in'});task.append(promptEl(w,prompt,q));const list=h('div',{class:'opts'});let answered=false;const fb=h('div');
+  const choose=(x,btn)=>{if(answered)return;answered=true;const ok=x===w;[...list.children].forEach((b,i)=>{b.disabled=true;if(opts[i]===w)b.classList.add('correct');else if(b===btn)b.classList.add('wrong');else b.classList.add('dim');});if(prompt!=='audio'&&state.settings.autoplay)audio.speak(w.s);afterAnswer(w,ok?'good':'again',ok);audio.sfx(ok?'good':'bad');fb.append(feedbackEl(w,ok?'good':'again',ok?'Correct':'Not quite'),continueBtn());};
+  opts.forEach((x,i)=>{const b=h('button',{class:'opt',onclick:e=>choose(x,e.currentTarget)},h('span',{class:'key'},i+1),optionLabel(x,answer));list.append(b);});
+  task.append(list,fb,h('div',{class:'kbd'},'Keys 1–4 to answer, Enter to continue'));c.append(task);
+  const key=e=>{if(e.key>='1'&&e.key<='4'){const b=list.children[+e.key-1];if(b&&!answered)b.click();}};document.addEventListener('keydown',key);onLeave(()=>document.removeEventListener('keydown',key));}
+function feedbackEl(w,outcome,title,detail){const it=rec(w);return h('div',{class:'feedback '+outcome+' pop'},h('div',{class:'grow'},h('div',{class:'v'},title),h('div',{class:'row',style:'margin-top:4px'},h('span',{class:'hz',style:'font-size:22px'},w.s),pyEl(w.y),h('span',{class:'muted'},w.m[0])),detail?h('div',{class:'d',style:'margin-top:4px'},detail):null,it?h('div',{class:'d',style:'margin-top:6px'},stagePill(w),' · next in '+fmtDue(it.d)):null),h('button',{class:'btn sm ghost',onclick:()=>openSheet(w)},'Details'));}
+function continueBtn(label){const b=h('button',{class:'btn primary block',style:'margin-top:4px',onclick:()=>nextCard()},label||'Continue');const key=e=>{if(e.key==='Enter'){e.preventDefault();b.click();}};document.addEventListener('keydown',key);onLeave(()=>document.removeEventListener('keydown',key));setTimeout(()=>b.focus({preventScroll:true}),50);return b;}
+function renderType(w,{fromEnglish}){const c=cardEl();const task=h('div',{class:'task fade-in'});task.append(promptEl(w,fromEnglish?'meaning':'hanzi',fromEnglish?'Type the pinyin for this word':'Type the pinyin, tones included'));const input=h('input',{type:'text',placeholder:'e.g. ni3 hao3',autocomplete:'off',autocapitalize:'off',autocorrect:'off',spellcheck:'false','aria-label':'Pinyin answer'});const btn=h('button',{class:'btn primary'},'Check');const box=h('div',{class:'typebox'},input,btn);const fb=h('div');let done=false;
+  const submit=()=>{if(done)return;const val=input.value.trim();if(!val)return;done=true;input.disabled=true;btn.disabled=true;const r=checkPinyin(val,w.y);let outcome,title,detail;if(r==='good'){outcome='good';title='Correct';}else if(r==='toneless'){outcome=state.settings.strictTones?'again':'almost';title='Right sounds, no tones';detail='Add the tone numbers next time: '+w.y.map(x=>x[0]+(x[1]===5?'':x[1])).join(' ');}else if(r==='tones'){outcome='again';title='Right sounds, wrong tones';detail='It is '+pyText(w.y)+' ('+w.y.map(x=>x[0]+(x[1]===5?'':x[1])).join(' ')+')';}else{outcome='again';title='Not quite';detail='Answer: '+w.y.map(x=>x[0]+(x[1]===5?'':x[1])).join(' ');}
+    if(state.settings.autoplay)audio.speak(w.s);afterAnswer(w,outcome,outcome==='good');audio.sfx(outcome==='good'?'good':outcome==='almost'?'almost':'bad');fb.append(feedbackEl(w,outcome,title,detail),continueBtn());};
+  btn.addEventListener('click',submit);input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submit();}});
+  task.append(box,fb,h('div',{class:'kbd'},'Tones as numbers (ma1 ma2 ma3 ma4), neutral tone needs none · ü = v'));c.append(task);setTimeout(()=>input.focus({preventScroll:true}),80);}
+function renderWrite(w,{inFlow,onDone}){const c=cardEl();const task=h('div',{class:'task fade-in'});const chars=[...w.s];let idx=0,mistakes=0;const dots=h('div',{class:'dots'},chars.map(()=>h('i')));const p=h('div',{class:'prompt'},h('div',{class:'q'},'Draw the character'+(chars.length>1?'s':'')+' from memory'),pyEl(w.y),h('div',{class:'en'},w.m[0]),chars.length>1?dots:null);const area=h('div',{class:'writers'});const fb=h('div');const tools=h('div',{class:'row',style:'justify-content:center'});task.append(p,area,tools,fb);c.append(task);if(state.settings.autoplay)setTimeout(()=>audio.speak(w.s),200);
+  let writer=null;const finishWord=()=>{const perChar=mistakes/chars.length;const outcome=perChar<=1?'good':perChar<=3?'almost':'again';const title=mistakes===0?'Perfect strokes':outcome==='good'?'Written':outcome==='almost'?'Written, with hints':'Needs more practice';const detail=mistakes+' stroke mistake'+(mistakes===1?'':'s');if(inFlow){afterAnswer(w,outcome,mistakes===0);fb.append(feedbackEl(w,outcome,title,detail),continueBtn());}else{fb.append(feedbackEl(w,outcome,title,detail));onDone&&onDone(outcome,mistakes);}audio.sfx(outcome==='good'?(mistakes?'good':'perfect'):outcome==='almost'?'almost':'bad');tools.innerHTML='';};
+  const startChar=()=>{area.innerHTML='';tools.innerHTML='';const ch=chars[idx];[...dots.children].forEach((d,i)=>{d.className=i<idx?'ok':i===idx?'on':'';});const box=h('div',{class:'tzg'});area.append(box);const size=Math.min(260,Math.round(window.innerWidth*0.72));writer=makeWriter(box,ch,{size,hintAfter:2});if(!writer){mistakes+=0;idx++;if(idx<chars.length)startChar();else finishWord();return;}
+    writer.quiz({onMistake:()=>{mistakes++;},onComplete:()=>{box.classList.add('done');idx++;setTimeout(()=>{if(idx<chars.length)startChar();else finishWord();},650);}});
+    tools.append(h('button',{class:'btn sm',onclick:()=>{mistakes+=3;writer.cancelQuiz();writer.showCharacter();writer.animateCharacter({onComplete:()=>{setTimeout(()=>{writer.hideCharacter();writer.quiz({onMistake:()=>{mistakes++;},onComplete:()=>{box.classList.add('done');idx++;setTimeout(()=>{if(idx<chars.length)startChar();else finishWord();},650);}});},400);}});}},'Show me (costs 3)'),speakBtn(w.s));onLeave(()=>{try{writer&&writer.cancelQuiz();}catch(e){}});};
+  startChar();}
+function renderBoardCard(words){const c=cardEl();const wrap=h('div',{class:'task fade-in'});wrap.append(h('div',{class:'row',style:'justify-content:space-between'},h('div',null,h('div',{class:'label'},'Flow break'),h('h2',null,'Match what you just practiced')),h('span',{class:'combo',id:'board-combo',hidden:true})));const side=audio.available&&Math.random()<0.3?'audio':rnd(['pinyin','meaning']);const boardEl=h('div');wrap.append(boardEl);c.append(wrap);const seen=new Set();let pairs=0,mist=0;
+  makeBoard(boardEl,words,{side,onPair:(w,ok)=>{if(ok){pairs++;addXP(2);audio.sfx('good');}else{mist++;audio.sfx('bad');if(!seen.has(w.s)){seen.add(w.s);const it=rec(w);if(it){it.d=Math.min(it.d,Date.now()+10*MIN);it.n=Date.now();cloud.dirty.add('l'+w.l);requeue(w,'almost');}}}save();updateTop();},onDone:()=>{const fb=h('div',{class:'feedback '+(mist?'almost':'good')+' pop'},h('div',{class:'grow'},h('div',{class:'v'},mist?'Board cleared':'Clean board!'),h('div',{class:'d'},mist?mist+' slip'+(mist===1?'':'s')+'. Slipped words come back shortly.':'No mistakes. +'+(pairs*2)+' xp')));if(!mist){addXP(5);audio.sfx('perfect');}wrap.append(fb,continueBtn());save();updateTop();}});}
+
+/* ---------------- MATCH BOARD (shared) ---------------- */
+function makeBoard(container,words,{side='pinyin',onPair,onDone}){container.innerHTML='';const pairs=words.map(w=>{let s=side==='mixed'?rnd(audio.available?['pinyin','meaning','audio']:['pinyin','meaning']):side;if(s==='audio'&&!audio.available)s='pinyin';return{w,s};});
+  const left=h('div',{class:'col'}),right=h('div',{class:'col'});const board=h('div',{class:'board'},left,right);container.append(board);let selL=null,selR=null,remaining=pairs.length,lock=false;
+  const tileFor=(p,isLeft)=>{const t=h('button',{class:'tile'+(isLeft?' hz':''),'data-k':p.w.s});if(isLeft)t.textContent=state.settings.trad&&p.w.t?p.w.t:p.w.s;else if(p.s==='pinyin')t.append(pyEl(p.w.y));else if(p.s==='meaning')t.textContent=p.w.m[0];else{t.innerHTML=ICON.speaker;t.classList.add('audio');t.setAttribute('aria-label','Play audio');}
+    t.addEventListener('click',()=>{if(lock||t.classList.contains('done'))return;if(!isLeft&&p.s==='audio')audio.speak(p.w.s);if(isLeft){if(selL===t){t.classList.remove('sel');selL=null;return;}if(selL)selL.classList.remove('sel');selL=t;t.classList.add('sel');}else{if(selR===t){t.classList.remove('sel');selR=null;return;}if(selR)selR.classList.remove('sel');selR=t;t.classList.add('sel');}if(selL&&selR)check();});return t;};
+  const check=()=>{const a=selL,b=selR;const ok=a.dataset.k===b.dataset.k;const w=BY.get(a.dataset.k);lock=true;a.classList.remove('sel');b.classList.remove('sel');if(ok){a.classList.add('ok');b.classList.add('ok');setTimeout(()=>{a.classList.add('done');b.classList.add('done');},180);remaining--;selL=selR=null;lock=false;onPair&&onPair(w,true);if(remaining===0)setTimeout(()=>onDone&&onDone(),420);}else{a.classList.add('shake');b.classList.add('shake');onPair&&onPair(w,false);setTimeout(()=>{a.classList.remove('shake');b.classList.remove('shake');selL=selR=null;lock=false;},380);}};
+  pairs.forEach(p=>left.append(tileFor(p,true)));shuffle(pairs).forEach(p=>right.append(tileFor(p,false)));return{destroy(){container.innerHTML='';}};}
+function poolFor(levels){const inLv=W.filter(w=>levels.includes(w.l));const learning=inLv.filter(w=>{const it=rec(w);return it&&it.s>0&&it.s<7;});const seen=inLv.filter(w=>rec(w));return{all:inLv,learning,seen};}
+function pickBoardWords(levels,n,exclude){const{all,learning,seen}=poolFor(levels);const ex=new Set(exclude||[]);const out=[];const usedM=new Set(),usedP=new Set();const take=w=>{if(ex.has(w.s)||usedM.has(w.m[0])||usedP.has(w.p))return false;out.push(w);usedM.add(w.m[0]);usedP.add(w.p);ex.add(w.s);return true;};for(const w of shuffle(learning)){if(out.length>=Math.ceil(n*0.6))break;take(w);}for(const w of shuffle(seen)){if(out.length>=Math.ceil(n*0.8))break;take(w);}for(const w of shuffle(all)){if(out.length>=n)break;take(w);}if(out.length<n)for(const w of shuffle(W)){if(out.length>=n)break;take(w);}return shuffle(out);}
+
+/* ---------------- PLAY ---------------- */
+SCREENS.play=function(params){const mode=params.mode||'menu';if(mode==='match')return renderMatchSetup();if(mode==='tones')return renderToneDrill();if(mode==='listen')return renderListenDrill();if(mode==='write')return renderWriteDrill();
+  const root=h('div',{class:'stack fade-in'},h('div',null,h('h1',null,'Play'),h('p',{class:'muted',style:'margin:6px 0 0;max-width:60ch'},'Fast drills for extra reps. They never move a word up the ladder, but a slip sends it back for review sooner.')),h('div',{class:'grid2'},tileBtn('配','Match','The classic: pair characters with pinyin, meaning or audio against the clock. Sudden death for the brave.',()=>go('play',{mode:'match'})),tileBtn('声','Tone Sniper','Hear a word and pick the exact tone pattern. The part most learners skip.',()=>go('play',{mode:'tones'})),tileBtn('听','Listen','Audio only. Pick the right characters among sound-alikes.',()=>go('play',{mode:'listen'})),tileBtn('写','Write','Draw characters stroke by stroke from pinyin and meaning.',()=>go('play',{mode:'write'}))));screenEl.append(root);};
+function backBar(title,sub){return h('div',{class:'row',style:'margin-bottom:14px'},h('button',{class:'iconbtn','aria-label':'Back',html:ICON.back,onclick:()=>go('play')}),h('div',null,h('h2',null,title),sub?h('div',{class:'small muted'},sub):null));}
+function bestKey(){const S=state.settings;return[S.matchLevels.join(''),S.matchSide,S.matchPairs,S.matchTimer?'t':'r',S.suddenDeath?'sd':''].join('|');}
+function renderMatchSetup(){const S=state.settings;const root=h('div',{class:'stack fade-in'});root.append(backBar('Match','Pair the characters. Fast fingers, faster recall.'));const card=h('div',{class:'card stack'});
+  card.append(h('div',null,h('div',{class:'label',style:'margin-bottom:8px'},'Levels'),levelChips(S.matchLevels,v=>{setSetting('matchLevels',v);render();})));
+  const sideRow=h('div',{class:'filters'});for(const[v,l]of[['pinyin','Pinyin'],['meaning','Meaning'],['audio','Audio'],['mixed','Mixed']])sideRow.append(h('button',{class:'fchip'+(S.matchSide===v?' active':''),onclick:()=>{if(v==='audio'&&!audio.available){toast('No Chinese voice available on this device');return;}setSetting('matchSide',v);render();}},l));card.append(h('div',null,h('div',{class:'label',style:'margin-bottom:8px'},'Match 汉字 with'),sideRow));
+  const pr=h('div',{class:'filters'});for(const n of[4,6,8])pr.append(h('button',{class:'fchip'+(S.matchPairs===n?' active':''),onclick:()=>{setSetting('matchPairs',n);render();}},n+' pairs'));card.append(h('div',null,h('div',{class:'label',style:'margin-bottom:8px'},'Board size'),pr));
+  card.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Timer'),h('div',{class:'sub'},'60 seconds, +3 s per pair, −3 s per slip')),switchEl(S.matchTimer,v=>setSetting('matchTimer',v))),h('div',{class:'setrow'},h('div',null,h('label',null,'Sudden death'),h('div',{class:'sub'},'One slip ends the run')),switchEl(S.suddenDeath,v=>setSetting('suddenDeath',v))));
+  const best=state.stats.best[bestKey()]||0;card.append(h('div',{class:'row',style:'justify-content:space-between'},h('div',{class:'small muted'},best?'Best for this setup: '+best:'No score yet for this setup'),h('button',{class:'btn primary',onclick:()=>renderMatchGame()},'Start')));root.append(card);screenEl.append(root);}
+function renderMatchGame(){clearScreen();const S=state.settings;const g={score:0,combo:0,best:0,pairs:0,boards:0,mist:0,missed:[],endAt:Date.now()+60000,running:true,used:[]};const root=h('div',{class:'stack fade-in'});const scoreEl=h('span',{class:'big tnum'},'0');const comboEl=h('span',{class:'combo',hidden:true});const timerBar=h('i',{style:'width:100%'});const timer=h('div',{class:'timer'},timerBar);
+  root.append(h('div',{class:'row',style:'justify-content:space-between'},h('div',{class:'scoreline'},h('span',{class:'faint small'},'Score'),scoreEl,comboEl),h('button',{class:'btn sm ghost',onclick:()=>gameOver('quit')},'End')));if(S.matchTimer)root.append(timer);else root.append(h('div',{class:'small faint'},'Relaxed mode · no timer'));const boardWrap=h('div');root.append(boardWrap);screenEl.append(root);
+  const mult=()=>1+Math.min(3,Math.floor(g.combo/3));
+  const newBoard=()=>{const words=pickBoardWords(S.matchLevels,S.matchPairs,g.used.slice(-S.matchPairs*2));g.used.push(...words.map(w=>w.s));boardWrap.classList.remove('fade-in');void boardWrap.offsetWidth;boardWrap.classList.add('fade-in');makeBoard(boardWrap,words,{side:S.matchSide,onPair:(w,ok)=>{if(!g.running)return;if(ok){g.pairs++;g.combo++;g.score+=10*mult();if(S.matchTimer)g.endAt+=3000;audio.sfx(g.combo%5===0?'perfect':'good');}else{g.mist++;g.combo=0;if(!g.missed.includes(w.s))g.missed.push(w.s);const it=rec(w);if(it){it.d=Math.min(it.d,Date.now()+10*MIN);it.n=Date.now();cloud.dirty.add('l'+w.l);save();}audio.sfx('bad');if(S.suddenDeath){gameOver('death');return;}if(S.matchTimer)g.endAt-=3000;}scoreEl.textContent=g.score;comboEl.hidden=g.combo<3;comboEl.textContent='combo ×'+mult();},onDone:()=>{if(!g.running)return;g.boards++;g.score+=15;if(S.matchTimer)g.endAt+=4000;scoreEl.textContent=g.score;newBoard();}});};
+  let raf=null;const tick=()=>{if(!g.running)return;if(S.matchTimer){const left=g.endAt-Date.now();const pct=clamp(100*left/60000,0,100);timerBar.style.width=pct+'%';timer.classList.toggle('low',left<12000);if(left<=0){gameOver('time');return;}}raf=requestAnimationFrame(tick);};
+  const gameOver=why=>{if(!g.running)return;g.running=false;cancelAnimationFrame(raf);const key=bestKey();const prev=state.stats.best[key]||0;const isBest=g.score>prev;if(isBest)state.stats.best[key]=g.score;const xp=Math.floor(g.score/15)+g.boards*3;addXP(xp);touchStreak();cloud.dirty.add('meta');save();renderChips();clearScreen();const acc=g.pairs+g.mist?Math.round(100*g.pairs/(g.pairs+g.mist)):0;const out=h('div',{class:'stack fade-in'},h('div',{class:'card'},h('div',{class:'row',style:'justify-content:space-between;align-items:flex-start'},h('div',null,h('div',{class:'label'},why==='death'?'Sudden death':why==='time'?'Time is up':'Run ended'),h('h1',null,isBest&&g.score>0?'New best!':g.score>=300?'Strong run':'Nice warm-up')),isBest&&g.score>0?h('div',{class:'seal two'},'最佳'):acc>=90&&g.pairs>=8?h('div',{class:'seal'},'优'):null),h('div',{class:'row',style:'gap:22px;margin-top:14px'},h('div',{class:'stat'},h('b',null,g.score),h('span',null,'score')),h('div',{class:'stat'},h('b',null,Math.max(prev,g.score)),h('span',null,'best')),h('div',{class:'stat'},h('b',null,g.pairs),h('span',null,'pairs')),h('div',{class:'stat'},h('b',null,acc+'%'),h('span',null,'accuracy')),h('div',{class:'stat'},h('b',null,'+'+xp),h('span',null,'xp')))));if(g.missed.length)out.append(h('div',{class:'card'},h('h3',null,'Slipped on'),h('p',{class:'small muted',style:'margin:4px 0 8px'},'These are pulled forward in your next Flow session.'),h('div',{class:'row'},g.missed.map(k=>wordLink(BY.get(k))))));out.append(h('div',{class:'row'},h('button',{class:'btn primary',onclick:()=>renderMatchGame()},'Play again'),h('button',{class:'btn',onclick:()=>go('play',{mode:'match'})},'Change setup'),h('button',{class:'btn ghost',onclick:()=>go('home')},'Home')));screenEl.append(out);audio.sfx(isBest?'perfect':'almost');};
+  onLeave(()=>{g.running=false;cancelAnimationFrame(raf);});audio.sfx('start');newBoard();tick();}
+
+/* ---------------- DRILLS ---------------- */
+function drillWords(n,filter){const S=state.settings;const{all,learning,seen}=poolFor(S.levels);const f=filter||(()=>true);const out=[];const push=w=>{if(out.length<n&&!out.includes(w)&&f(w))out.push(w);};shuffle(learning).forEach(push);shuffle(seen).forEach(push);shuffle(all).forEach(push);if(out.length<n)shuffle(W).forEach(push);return out;}
+function drillShell(title,sub,total){const root=h('div',{class:'stack fade-in'});const prog=h('div',{class:'bar'},h('i',{style:'width:0%'}));const score=h('span',{class:'chip tnum'},'0 / '+total);root.append(backBar(title,sub),h('div',{class:'row'},h('div',{class:'grow'},prog),score));const body=h('div');root.append(body);screenEl.append(root);return{body,set(i,s){prog.firstChild.style.width=Math.round(100*i/total)+'%';score.textContent=s+' / '+total;}};}
+function drillSummary(body,title,correct,total,xp,extra){body.innerHTML='';const acc=Math.round(100*correct/Math.max(1,total));body.append(h('div',{class:'card fade-in'},h('div',{class:'row',style:'justify-content:space-between;align-items:flex-start'},h('div',null,h('div',{class:'label'},title),h('h1',null,acc>=90?'Sharp':acc>=70?'Solid':'Getting there')),acc>=90?h('div',{class:'seal'},'优'):null),h('div',{class:'row',style:'gap:22px;margin-top:14px'},h('div',{class:'stat'},h('b',null,correct+'/'+total),h('span',null,'correct')),h('div',{class:'stat'},h('b',null,acc+'%'),h('span',null,'accuracy')),h('div',{class:'stat'},h('b',null,'+'+xp),h('span',null,'xp'))),extra||null,h('div',{class:'row',style:'margin-top:14px'},h('button',{class:'btn primary',onclick:()=>render()},'Again'),h('button',{class:'btn',onclick:()=>go('play')},'Other drills'))));addXP(xp);touchStreak();save();renderChips();audio.sfx(acc>=90?'perfect':'good');}
+function slip(w){const it=rec(w);if(it){it.d=Math.min(it.d,Date.now()+10*MIN);it.n=Date.now();cloud.dirty.add('l'+w.l);save();}}
+function renderToneDrill(){const TOTAL=10;const words=drillWords(TOTAL,w=>w.y.length<=3&&w.y.some(s=>s[1]!==5));const sh=drillShell('Tone Sniper','Hear it, see it, nail the tones',TOTAL);let i=0,correct=0,streak=0;const missed=[];
+  const round=()=>{if(i>=words.length){drillSummary(sh.body,'Tone Sniper',correct,words.length,correct*5+(correct===words.length?20:0),missed.length?h('div',{style:'margin-top:12px'},h('div',{class:'label'},'Missed'),h('div',{class:'row',style:'margin-top:6px'},missed.map(w=>wordLink(w)))):null);return;}const w=words[i];sh.set(i,correct);sh.body.innerHTML='';const canHear=audio.available;const p=h('div',{class:'prompt'},h('div',{class:'q'},canHear?'Listen, then pick the tones':'Pick the tones'),h('div',{class:'hz-big'},w.s),h('div',{class:'muted'},w.m[0]),canHear?h('button',{class:'btn sm',html:ICON.speaker+' Replay',onclick:()=>audio.speak(w.s)}):null);
+    const variants=toneVariants(w,3);const opts=shuffle([w.y,...variants]);const list=h('div',{class:'opts'});let done=false;const fb=h('div');
+    opts.forEach((y,k)=>{const isRight=y===w.y;const b=h('button',{class:'opt',onclick:()=>{if(done)return;done=true;[...list.children].forEach((bb,j)=>{bb.disabled=true;if(opts[j]===w.y)bb.classList.add('correct');else if(bb===b)bb.classList.add('wrong');else bb.classList.add('dim');});if(isRight){correct++;streak++;audio.sfx(streak>=3?'perfect':'good');}else{streak=0;missed.push(w);slip(w);audio.sfx('bad');}if(!canHear||!isRight)audio.speak(w.s);fb.append(h('div',{class:'feedback '+(isRight?'good':'again')+' pop'},h('div',{class:'grow'},h('div',{class:'v'},isRight?'Right tones':'Listen again'),h('div',{class:'row',style:'margin-top:6px'},pyEl(w.y),h('span',{class:'row',style:'gap:4px'},w.y.map(([b,t])=>h('span',{class:'t'+t,html:toneSVG(t)}))),h('span',{class:'small muted'},w.y.map(x=>toneName(x[1])).join(' + '))))),h('button',{class:'btn primary block',style:'margin-top:4px',onclick:()=>{i++;round();}},'Next'));}},h('span',{class:'key'},k+1),pyEl(y),h('span',{class:'row faint',style:'margin-left:auto;gap:2px'},y.map(([b,t])=>h('span',{html:toneSVG(t)}))));list.append(b);});
+    sh.body.append(p,list,fb);if(canHear)setTimeout(()=>audio.speak(w.s),250);};
+  round();}
+function toneName(t){return['','1st high','2nd rising','3rd dipping','4th falling','neutral'][t];}
+function renderListenDrill(){const TOTAL=10;if(!audio.available){screenEl.append(backBar('Listen','Audio only'),h('div',{class:'card'},h('h3',null,'No Chinese voice found'),h('p',{class:'muted'},'This drill needs your browser’s speech voices. On most phones and in Chrome or Edge on a computer, a Mandarin voice is built in. Check that Audio is on in Me, or try the Tone drill, which also works from the characters.'),h('button',{class:'btn primary',onclick:()=>go('play',{mode:'tones'})},'Go to Tones')));return;}
+  const words=drillWords(TOTAL,w=>w.s.length<=4);const sh=drillShell('Listen','Pick what you hear',TOTAL);let i=0,correct=0;const missed=[];
+  const round=()=>{if(i>=words.length){drillSummary(sh.body,'Listen',correct,words.length,correct*5+(correct===words.length?20:0),missed.length?h('div',{style:'margin-top:12px'},h('div',{class:'label'},'Missed'),h('div',{class:'row',style:'margin-top:6px'},missed.map(w=>wordLink(w)))):null);return;}const w=words[i];sh.set(i,correct);sh.body.innerHTML='';const p=h('div',{class:'prompt'},h('div',{class:'q'},'Which word did you hear?'),h('button',{class:'btn',style:'font-size:18px;padding:14px 22px',html:ICON.speaker+' Play again',onclick:()=>audio.speak(w.s)}));const opts=shuffle([w,...distractors(w,3,'hanzi')]);const list=h('div',{class:'opts'});let done=false;const fb=h('div');
+    opts.forEach((x,k)=>{const b=h('button',{class:'opt',onclick:()=>{if(done)return;done=true;const ok=x===w;[...list.children].forEach((bb,j)=>{bb.disabled=true;if(opts[j]===w)bb.classList.add('correct');else if(bb===b)bb.classList.add('wrong');else bb.classList.add('dim');});if(ok){correct++;audio.sfx('good');}else{missed.push(w);slip(w);audio.sfx('bad');}fb.append(h('div',{class:'feedback '+(ok?'good':'again')+' pop'},h('div',{class:'grow'},h('div',{class:'v'},ok?'Correct':'That was '+w.s),h('div',{class:'row',style:'margin-top:4px'},h('span',{class:'hz',style:'font-size:22px'},w.s),pyEl(w.y),h('span',{class:'muted'},w.m[0])),ok?null:h('div',{class:'d',style:'margin-top:4px'},'You picked ',h('span',{class:'hz'},x.s),' ',pyText(x.y),' · ',x.m[0]))),h('button',{class:'btn primary block',style:'margin-top:4px',onclick:()=>{i++;round();}},'Next'));}},h('span',{class:'key'},k+1),h('span',{class:'hz',style:'font-size:24px'},x.s));list.append(b);});
+    sh.body.append(p,list,fb);setTimeout(()=>audio.speak(w.s),250);};
+  round();}
+function renderWriteDrill(){const TOTAL=6;const words=drillWords(TOTAL,canWrite);const sh=drillShell('Write','Stroke by stroke, from memory',TOTAL);let i=0,correct=0,xp=0;
+  const round=()=>{if(i>=words.length){drillSummary(sh.body,'Write',correct,words.length,xp);return;}const w=words[i];sh.set(i,correct);sh.body.innerHTML='';sh.body.append(h('div',{class:'card faint'},'Loading stroke data…'));ensureStrokes([...w.s]).then(()=>{if(!sh.body.isConnected)return;const holder=h('div',{id:'card'});sh.body.innerHTML='';sh.body.append(holder);renderWrite(w,{inFlow:false,onDone:(outcome,mist)=>{if(outcome==='good'){correct++;xp+=12*w.s.length;}else if(outcome==='almost')xp+=4*w.s.length;else slip(w);holder.append(h('button',{class:'btn primary block',style:'margin-top:10px',onclick:()=>{i++;round();}},'Next'));}});}).catch(()=>{i++;round();});};
+  round();}
+
+/* ---------------- WORDS ---------------- */
+let wordsUI={filter:'1',q:''};
+SCREENS.words=function(){const root=h('div',{class:'stack fade-in'});root.append(h('h1',null,'Words'));const search=h('input',{class:'search',type:'search',placeholder:'Search 汉字, pinyin or English',value:wordsUI.q,'aria-label':'Search words',id:'word-search'});const list=h('div',{class:'card',style:'padding:4px 6px'});const count=h('div',{class:'small muted'});
+  const filters=h('div',{class:'filters'});const F=[['due','Due'],['learning','Learning'],['trouble','Trouble'],['1','HSK 1'],['2','HSK 2'],['3','HSK 3'],['4','HSK 4'],['5','HSK 5'],['6','HSK 6']];for(const[v,l]of F)filters.append(h('button',{class:'fchip'+(wordsUI.filter===v?' active':''),onclick:()=>{wordsUI.filter=v;render();}},l));
+  const draw=()=>{list.innerHTML='';const q=wordsUI.q.trim().toLowerCase();const qn=q.replace(/\s+/g,'');let rows;const now=Date.now();if(wordsUI.filter==='due')rows=dueWords(now);else if(wordsUI.filter==='learning')rows=W.filter(w=>{const it=rec(w);return it&&it.s>0&&it.s<7;});else if(wordsUI.filter==='trouble')rows=W.filter(w=>{const it=rec(w);return it&&it.l>=3;}).sort((a,b)=>rec(b).l-rec(a).l);else rows=BY_LEVEL[+wordsUI.filter]||[];
+    if(q)rows=(q?W:rows).filter(w=>w.s.includes(q)||(w.t&&w.t.includes(q))||w.p.toLowerCase().replace(/\s+/g,'').includes(qn)||w.y.map(x=>x[0]+(x[1]===5?'':x[1])).join('').includes(qn)||w.y.map(x=>x[0]).join('').includes(qn)||w.m.some(m=>m.toLowerCase().includes(q)));
+    const learning=rows.filter(w=>{const it=rec(w);return it&&it.s>0&&it.s<7;}).length,mastered=rows.filter(w=>{const it=rec(w);return it&&it.s>=7;}).length;count.textContent=rows.length+' words · '+learning+' learning · '+mastered+' mastered';let shown=0;const CHUNK=120;const more=h('button',{class:'btn block ghost',style:'margin:6px 0'},'Show more');const addRows=()=>{const slice=rows.slice(shown,shown+CHUNK);for(const w of slice)list.append(h('button',{class:'wrow',onclick:()=>openSheet(w)},h('span',{class:'hz'},w.s),h('span',{class:'grow',style:'min-width:0'},pyEl(w.y),h('div',{class:'m'},w.m[0])),stagePill(w)));shown+=slice.length;if(shown<rows.length){list.append(more);}else more.remove();};more.addEventListener('click',()=>{more.remove();addRows();});if(!rows.length)list.append(h('div',{class:'muted',style:'padding:14px'},wordsUI.filter==='due'?'Nothing due. Nice.':'No words match.'));addRows();};
+  let t;search.addEventListener('input',()=>{wordsUI.q=search.value;clearTimeout(t);t=setTimeout(draw,120);});root.append(search,filters,count,list);screenEl.append(root);draw();};
+function openSheet(w){const bg=h('div',{class:'sheet-bg',onclick:e=>{if(e.target===bg)close();}});const sheet=h('div',{class:'sheet fade-in',role:'dialog','aria-label':w.s});bg.append(sheet);const close=()=>{bg.remove();document.removeEventListener('keydown',esc);};const esc=e=>{if(e.key==='Escape')close();};document.addEventListener('keydown',esc);
+  const big=h('div',{class:'writers'});const it=rec(w);const info=h('div',{class:'grow'},h('div',{class:'row',style:'gap:8px'},h('span',{class:'stagepill'},'HSK '+w.l),stagePill(w)),pyEl(w.y),h('div',{class:'small muted'},posText(w)+(w.cl?' · measure word '+w.cl:'')+(w.t?' · traditional '+w.t:'')));info.querySelector('.py').style.fontSize='26px';
+  sheet.append(h('div',{class:'head'},big,info,h('button',{class:'iconbtn','aria-label':'Close',html:ICON.close,onclick:close})));
+  sheet.append(h('ol',{class:'meanings',style:'margin:14px 0 0;padding-left:20px'},w.m.map(m=>h('li',null,m))));
+  sheet.append(h('div',{class:'row',style:'margin-top:14px'},h('button',{class:'btn sm',html:ICON.speaker+' Hear',onclick:()=>{if(!audio.speak(w.s))toast('No Chinese voice available on this device');}}),canWrite(w)?h('button',{class:'btn sm',onclick:()=>{close();practiceWrite(w);}},'Practice writing'):null,it&&it.s>=7?null:h('button',{class:'btn sm',onclick:()=>{markKnown(w);close();toast('Marked as mastered');render();}},'I know this'),it?h('button',{class:'btn sm ghost',onclick:()=>{resetWord(w);close();toast('Progress reset for '+w.s);render();}},'Reset'):null));
+  const bd=breakdownEl(w);if(bd.children.length)sheet.append(h('div',{class:'label',style:'margin:18px 0 8px'},'Inside the characters'),bd);
+  const sents=sentencesFor(w,3);if(sents.length)sheet.append(h('div',{class:'label',style:'margin:18px 0 8px'},'In sentences'),h('div',{class:'stack',style:'gap:8px'},sents.map(s=>sentEl(s,w.s))));
+  const related=W.filter(x=>x!==w&&x.s.length<=3&&[...w.s].some(c=>x.s.includes(c))&&rec(x)).slice(0,8);if(related.length)sheet.append(h('div',{class:'label',style:'margin:18px 0 8px'},'Words you know with these characters'),h('div',{class:'row'},related.map(x=>wordLink(x))));
+  if(it)sheet.append(h('div',{class:'small faint',style:'margin-top:16px'},'Seen '+it.r+'× · '+it.l+' lapse'+(it.l===1?'':'s')+' · next review '+fmtDue(it.d)+' · ease '+it.e.toFixed(2)));
+  document.body.append(bg);renderBigHanzi(big,w,true);}
+function practiceWrite(w){clearScreen();state.ui.screen='play';renderTabs();screenEl.append(backBar('Practice writing','Trace it first, then try it blind'));const holder=h('div',{id:'card'});screenEl.append(holder);ensureStrokes([...w.s]).then(()=>{let traced=false;const run=()=>{holder.innerHTML='';const box=h('div',{class:'task fade-in'});const chars=[...w.s];let idx=0;const area=h('div',{class:'writers'});const p=h('div',{class:'prompt'},h('div',{class:'q'},traced?'Now from memory':'Trace the strokes'),h('div',{class:'row',style:'justify-content:center'},h('span',{class:'hz',style:'font-size:28px'},traced?'':w.s),pyEl(w.y)),h('div',{class:'muted'},w.m[0]));const fb=h('div');box.append(p,area,fb);holder.append(box);const startChar=()=>{area.innerHTML='';const tz=h('div',{class:'tzg'});area.append(tz);const wr=makeWriter(tz,chars[idx],{size:Math.min(260,Math.round(window.innerWidth*0.72)),outline:!traced,hintAfter:traced?2:1});if(!wr){idx++;if(idx<chars.length)startChar();else done();return;}wr.quiz({onComplete:()=>{tz.classList.add('done');idx++;setTimeout(()=>{if(idx<chars.length)startChar();else done();},600);}});onLeave(()=>{try{wr.cancelQuiz();}catch(e){}});};const done=()=>{audio.sfx('good');if(!traced){traced=true;fb.append(h('div',{class:'feedback good pop'},h('div',{class:'grow'},h('div',{class:'v'},'Traced'),h('div',{class:'d'},'Now the real test: no outline.'))),h('button',{class:'btn primary block',style:'margin-top:4px',onclick:run},'Write it blind'));}else{fb.append(h('div',{class:'feedback good pop'},h('div',{class:'grow'},h('div',{class:'v'},'Written from memory'),h('div',{class:'d'},'The Write rung of the ladder will test this again later.'))),h('div',{class:'row',style:'margin-top:4px'},h('button',{class:'btn primary',onclick:run},'Once more'),h('button',{class:'btn',onclick:()=>go('words')},'Back to words')));}};startChar();};run();}).catch(()=>{toast('Stroke data unavailable');go('words');});}
+
+/* ---------------- ME: progress + settings ---------------- */
+SCREENS.me=function(params){const S=state.settings;const root=h('div',{class:'stack fade-in'});const{r,next}=rankFor(state.stats.xp);
+  root.append(h('div',{class:'card'},h('div',{class:'rank'},h('div',{class:'zi'},r[1]),h('div',{class:'grow'},h('div',{class:'label'},'Rank'),h('h2',null,r[2],' · ',r[3]),h('div',{class:'small muted'},next?state.stats.xp+' xp · '+(next[0]-state.stats.xp)+' to '+next[1]:state.stats.xp+' xp · top of the ladder'))),h('div',{class:'small faint',style:'margin-top:10px'},'Ranks follow the old imperial exam degrees: '+RANKS.map(x=>x[1]).join(' → '))));
+  const days=[];for(let i=13;i>=0;i--){const k=dayShift(-i);const d=state.stats.days[k];const n=d?d.r+d.n:0;days.push(h('i',{class:n===0?'':n<10?'d1':n<30?'d2':'d3',title:k+': '+n+' answers'}));}
+  const acc=state.stats.reviews?Math.round(100*state.stats.correct/state.stats.reviews):0;
+  root.append(h('div',{class:'card stack'},h('div',{class:'row',style:'gap:22px'},h('div',{class:'stat'},h('b',null,state.stats.streak),h('span',null,'day streak')),h('div',{class:'stat'},h('b',null,state.stats.reviews),h('span',null,'answers')),h('div',{class:'stat'},h('b',null,acc+'%'),h('span',null,'accuracy')),h('div',{class:'stat'},h('b',null,Object.keys(state.items).length),h('span',null,'words started'))),h('div',null,h('div',{class:'label',style:'margin-bottom:6px'},'Last 14 days'),h('div',{class:'days'},days))));
+  const bars=h('div',{class:'stack',style:'gap:10px'});for(const l of LEVELS){const ws=BY_LEVEL[l];let a=0,b=0,c=0;for(const w of ws){const it=rec(w);if(!it||it.s===0)continue;if(it.s<=3)a++;else if(it.s<=6)b++;else c++;}const tot=ws.length;const seg=h('div',{class:'seg'},c?h('i',{style:'width:'+(100*c/tot)+'%;background:var(--stage-3)',title:c+' mastered'}):null,b?h('i',{style:'width:'+(100*b/tot)+'%;background:var(--stage-2)',title:b+' reviewing'}):null,a?h('i',{style:'width:'+(100*a/tot)+'%;background:var(--stage-1)',title:a+' learning'}):null);bars.append(h('div',{class:'lvbar'},h('span',{class:'muted'},'HSK '+l),seg,h('span',{class:'tnum small',style:'text-align:right'},(a+b+c)+'/'+tot)));}
+  root.append(h('div',{class:'card stack'},h('h3',null,'Ladder progress by level'),bars,h('div',{class:'legend'},h('span',null,h('i',{style:'background:var(--stage-1)'}),'Learning (rungs 1–3)'),h('span',null,h('i',{style:'background:var(--stage-2)'}),'Reviewing (4–6)'),h('span',null,h('i',{style:'background:var(--stage-3)'}),'Mastered'))));
+  const leeches=W.filter(w=>{const it=rec(w);return it&&it.l>=3;}).sort((a,b)=>rec(b).l-rec(a).l).slice(0,10);if(leeches.length)root.append(h('div',{class:'card'},h('h3',null,'Trouble words'),h('p',{class:'small muted',style:'margin:4px 0 8px'},'Lapsed three or more times. Open one and read the character hints; a story beats brute force.'),h('div',{class:'row'},leeches.map(w=>wordLink(w)))));
+  const set=h('div',{class:'card',id:'settings'});set.append(h('h3',{style:'margin-bottom:6px'},'Learning'));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',{for:'s-new'},'New words per day'),h('div',{class:'sub'},'Six is steady. Ten if you are keen.')),h('input',{id:'s-new',type:'number',min:0,max:30,value:S.newPerDay,onchange:e=>setSetting('newPerDay',clamp(+e.target.value||0,0,30))})));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',{for:'s-size'},'Cards per session'),h('div',{class:'sub'},'Reviews per Flow session, before re-asks')),h('input',{id:'s-size',type:'number',min:5,max:60,value:S.sessionSize,onchange:e=>setSetting('sessionSize',clamp(+e.target.value||20,5,60))})));
+  set.append(h('div',{class:'setrow',style:'display:block'},h('label',null,'Levels for new words'),h('div',{class:'sub',style:'margin-bottom:8px'},'Lower levels are introduced first, most common words first.'),levelChips(S.levels,v=>{setSetting('levels',v);render();})));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Strict tones'),h('div',{class:'sub'},'Typed answers without tones count as wrong')),switchEl(S.strictTones,v=>setSetting('strictTones',v))));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Show traditional forms'),h('div',{class:'sub'},'Prompts use 繁體 where it differs')),switchEl(S.trad,v=>setSetting('trad',v))));
+  set.append(h('h3',{style:'margin:18px 0 6px'},'Audio'));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Speech'),h('div',{class:'sub'},audio.voices.length?audio.voices.length+' Mandarin voice'+(audio.voices.length===1?'':'s')+' found':'No Mandarin voice found in this browser')),switchEl(S.audio,v=>{setSetting('audio',v);audio.pick();render();})));
+  if(audio.voices.length>1){const sel=h('select',{id:'s-voice',onchange:e=>{setSetting('voice',e.target.value);audio.pick();audio.speak('你好');}},audio.voices.map(v=>h('option',{value:v.voiceURI,selected:audio.voice&&v.voiceURI===audio.voice.voiceURI},v.name+' ('+v.lang+')')));set.append(h('div',{class:'setrow'},h('label',{for:'s-voice'},'Voice'),sel));}
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',{for:'s-rate'},'Speed'),h('div',{class:'sub'},'Slower is clearer for tones')),h('select',{id:'s-rate',onchange:e=>{setSetting('rate',+e.target.value);audio.speak('谢谢');}},[[0.7,'Slow'],[0.85,'Relaxed'],[1,'Natural']].map(([v,l])=>h('option',{value:v,selected:Math.abs(S.rate-v)<0.01},l)))));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Auto-play words'),h('div',{class:'sub'},'Hear each word when it appears')),switchEl(S.autoplay,v=>setSetting('autoplay',v))));
+  set.append(h('div',{class:'setrow'},h('div',null,h('label',null,'Sound effects')),switchEl(S.sfx,v=>setSetting('sfx',v))));
+  set.append(h('h3',{style:'margin:18px 0 6px'},'Your data'));
+  const ta=h('textarea',{class:'data',placeholder:'Paste a backup here to import it','aria-label':'Progress backup'});const status=h('div',{class:'small muted'},cloud.ready?'Progress is saved in this browser and synced to your claude.ai account.':'Progress is saved in this browser. Export a backup to move it to another device.');
+  set.append(status,h('div',{class:'row',style:'margin:10px 0'},h('button',{class:'btn sm',onclick:()=>{ta.value=JSON.stringify({v:1,items:state.items,stats:state.stats,settings:state.settings});ta.focus();ta.select();try{navigator.clipboard.writeText(ta.value).then(()=>toast('Backup copied to clipboard'),()=>toast('Backup shown below. Copy it from the box.'));}catch(e){toast('Backup shown below. Copy it from the box.');}}},'Export backup'),h('button',{class:'btn sm',onclick:()=>{try{const o=JSON.parse(ta.value);if(!o||typeof o!=='object'||!o.items)throw 0;let n=0;for(const[k,v]of Object.entries(o.items)){if(!BY.has(k))continue;const cur=state.items[k];if(!cur||(v.n||0)>=(cur.n||0)){state.items[k]=v;n++;cloud.dirty.add('l'+BY.get(k).l);}}if(o.stats)mergeStats({stats:o.stats,settings:o.settings});save();toast('Imported '+n+' words');render();}catch(e){toast('That does not look like a Hanzi Flow backup');}}},'Import'),h('button',{class:'btn sm danger',onclick:()=>{resetBox.hidden=!resetBox.hidden;}},'Reset everything')),ta);
+  const resetBox=h('div',{class:'card soft row',hidden:true,style:'justify-content:space-between;margin-top:10px'},h('span',null,'Delete all progress on this device? This cannot be undone.'),h('button',{class:'btn sm danger',onclick:()=>{state.items={};state.stats={xp:0,streak:0,lastDay:'',best:{},days:{},reviews:0,correct:0,settingsAt:Date.now()};for(const l of LEVELS)cloud.dirty.add('l'+l);cloud.dirty.add('meta');endSession();flushLocal();toast('Progress reset');go('home');}},'Yes, delete'));set.append(resetBox);
+  root.append(set,h('div',{class:'small faint',style:'line-height:1.6'},'Vocabulary: HSK 2.0 lists from complete-hsk-vocabulary (MIT) with CC-CEDICT definitions. Character hints and stroke data: Make Me a Hanzi (LGPL / Arphic Public License). Sentences: iam-nazmul/chinese (MIT) and Tatoeba (CC BY). Stroke quizzes: Hanzi Writer (MIT). Pronunciation uses your browser’s speech voices.'));
+  screenEl.append(root);if(params&&params.settings)setTimeout(()=>set.scrollIntoView({behavior:'smooth'}),50);};
+
+/* ---------------- boot ---------------- */
+function boot(){loadLocal();audio.init();$('#btn-settings').addEventListener('click',()=>go('me',{settings:true}));document.addEventListener('visibilitychange',()=>{if(document.hidden){if(saveT)flushLocal();cloud.flush();}});
+  const unlock=()=>{if(audio.ctx&&audio.ctx.state==='suspended')audio.ctx.resume();document.removeEventListener('pointerdown',unlock);};document.addEventListener('pointerdown',unlock);
+  render();cloud.init();
+  const idle=window.requestIdleCallback||(f=>setTimeout(f,1500));idle(()=>{const chars=new Set();for(const l of state.settings.levels)for(const w of BY_LEVEL[l])for(const c of w.s)chars.add(c);ensureStrokes([...chars]).catch(()=>{});});
+  try{if(window.claude&&window.claude.hot&&typeof window.claude.hot.snapshot==='function')window.claude.hot.snapshot(()=>({screen:state.ui.screen}));}catch(e){}}
+if(!W.length){screenEl.append(h('div',{class:'card'},h('h2',null,'Word data did not load'),h('p',{class:'muted'},'Open index.html from the project folder so the data/ files sit next to it.')));}
+else boot();
+})();
+</script>
+</body></html>
