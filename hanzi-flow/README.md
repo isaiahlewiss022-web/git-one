@@ -64,6 +64,13 @@ python3 -m http.server 8000
 
 then visit http://localhost:8000/.
 
+## Putting it online with GitHub Pages
+The repository ships a workflow (`.github/workflows/pages.yml`) that publishes this
+folder as a website. One-time setup on GitHub: **Settings → Pages → Build and
+deployment → Source: GitHub Actions**. From then on every push to `main` redeploys
+the site at `https://<your-user>.github.io/<repo>/`. Everything is static and uses
+relative paths, so it works from a sub-path.
+
 ## Files
 ```
 index.html            the whole app (HTML, CSS, JS)
