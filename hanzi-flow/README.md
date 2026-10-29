@@ -35,9 +35,11 @@ character with an etymology hint, and an example sentence you can tap to hear.
 ### Modes
 - **Flow** (Today tab): the daily session. Due reviews plus a few new words,
   interleaved, with a short Match board every six cards as a breather.
-- **Match**: the classic arcade. Pair characters with pinyin, meaning, audio or a
-  mix. 60-second timer, combo multiplier, best scores per setup, optional sudden
-  death. Slips pull the word forward in your next Flow session.
+- **Match**: the classic arcade, rebuilt around a deck of the words you are actually
+  learning (due words first). Pair characters with pinyin, meaning, audio or a mix;
+  every match is spoken and shown in full. No word repeats inside a run, a run is a
+  fixed number of boards, and words you slip on come back for one last board. Timer,
+  combo multiplier, best scores per setup, optional sudden death.
 - **Tone Sniper**: hear and see a word, pick the exact tone pattern. Wrong options
   differ only in tone, which is exactly the thing most learners skip.
 - **Listen**: audio only, pick the characters among similar-sounding words.
@@ -73,13 +75,25 @@ relative paths, so it works from a sub-path.
 
 ## Files
 ```
-index.html            the whole app (HTML, CSS, JS)
-data/vocab.js         7,419 words: HSK 2.0 levels 1–6 plus HSK 3.0 band 1–6 words missing from the old lists
+index.html            page markup; loads the data, Hanzi Writer and the app scripts
+styles.css            all styling (design tokens at the top, light and dark themes)
+js/01-data.js         word, character and sentence tables built from data/
+js/02-helpers.js      DOM helper, pinyin tone marks, answer checking
+js/03-state.js        settings, progress storage, optional cloud sync
+js/04-audio.js        speech and sound effects
+js/05-srs.js          the ladder and spaced-repetition scheduling
+js/06-ui.js           screens, tabs, shared widgets
+js/07-home-flow.js    Today screen and the Flow session
+js/08-play.js         Match board and arcade, Tone, Listen and Write drills
+js/09-words-me.js     Words browser, word sheet, Me screen and settings
+js/10-main.js         start-up
+data/vocab.js         7,419 words, one per line: HSK 2.0 levels 1–6 plus HSK 3.0 band 1–6 words missing from the old lists
 data/chars.js         definitions, decomposition, etymology hints for every character used
 data/sentences.js     7,051 graded example sentences
 data/strokes-N.js     stroke outlines and medians for the characters first met at level N (loaded on demand)
 vendor/hanzi-writer.min.js  stroke animation and quiz engine
 tools/build_data.py   regenerates data/ from the upstream sources
+tools/build_artifact.py  bundles everything into one HTML file
 ```
 
 ## Data sources and licences

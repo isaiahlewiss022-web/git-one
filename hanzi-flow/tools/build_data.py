@@ -242,11 +242,19 @@ for ch, lv in chars_in_words.items():
 def dump(obj):
     return json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
 
+def dump_list(rows):
+    """One record per line, so the file stays readable and diff-friendly in an editor."""
+    return '[\n' + ',\n'.join(dump(r) for r in rows) + '\n]'
+
+def dump_dict(d):
+    return '{\n' + ',\n'.join(json.dumps(k, ensure_ascii=False) + ':' + dump(v) for k, v in d.items()) + '\n}'
+
 for lv in range(1, 7):
     path = os.path.join(OUT, f'strokes-{lv}.js')
     with open(path, 'w', encoding='utf-8') as f:
         f.write('// Stroke data derived from Make Me a Hanzi (graphics.txt), Arphic Public License.\n')
-        f.write(f'window.CF_STROKES=window.CF_STROKES||{{}};Object.assign(window.CF_STROKES,{dump(by_level[lv])});\n')
+        f.write('// One character per line: {"strokes": [SVG paths], "medians": [[x,y] points per stroke]} in Hanzi Writer\'s 1024-unit grid.\n')
+        f.write(f'window.CF_STROKES=window.CF_STROKES||{{}};\nObject.assign(window.CF_STROKES,{dump_dict(by_level[lv])});\n')
         f.write(f'window.CF_STROKES_LOADED=window.CF_STROKES_LOADED||{{}};window.CF_STROKES_LOADED[{lv}]=true;\n')
     print(f'strokes-{lv}.js chars={len(by_level[lv])} bytes={os.path.getsize(path)}')
 
@@ -314,15 +322,16 @@ if os.path.exists(rox) and os.path.getsize(rox) > 10000:
 sent_rows = sentences
 with open(os.path.join(OUT, 'sentences.js'), 'w', encoding='utf-8') as f:
     f.write('// Sentences: iam-nazmul/chinese (MIT) [n]; Tatoeba via Roxaleen/hsk-annotated-corpus (CC BY 2.0 FR) [t].\n')
-    f.write(f'window.CF_SENTENCES={dump(sent_rows)};\n')
+    f.write('// Row: [chinese, pinyin, english, hskLevel, [vocab words used], source]\n')
+    f.write(f'window.CF_SENTENCES={dump_list(sent_rows)};\n')
 
 with open(os.path.join(OUT, 'vocab.js'), 'w', encoding='utf-8') as f:
     f.write('// HSK 2.0 vocabulary from drkameleon/complete-hsk-vocabulary (MIT), definitions CC-CEDICT (CC BY-SA 4.0).\n')
     f.write('// Row: [simplified, traditional-if-different, pinyin, syllables[[base,tone]], meanings[], level, pos, classifiers]\n')
-    f.write(f'window.CF_VOCAB={dump(vocab_rows)};\n')
+    f.write(f'window.CF_VOCAB={dump_list(vocab_rows)};\n')
 with open(os.path.join(OUT, 'chars.js'), 'w', encoding='utf-8') as f:
     f.write('// Character data from Make Me a Hanzi dictionary.txt (LGPL-3.0). Row: [definition, pinyin, decomposition, hint, radical, firstLevel]\n')
-    f.write(f'window.CF_CHARS={dump(char_rows)};\n')
+    f.write(f'window.CF_CHARS={dump_dict(char_rows)};\n')
 for name in ('vocab.js', 'chars.js', 'sentences.js'):
     print(name, os.path.getsize(os.path.join(OUT, name)), 'bytes')
 cov = Counter()
