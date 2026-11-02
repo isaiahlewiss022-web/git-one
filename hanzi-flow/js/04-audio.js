@@ -36,11 +36,32 @@ const audio = {
       this.voices[0] ||
       null;
   },
+  // Inside the Android app the WebView has no Web Speech voices; MainActivity exposes the
+  // phone's own text-to-speech engine as window.AndroidTTS instead.
+  get native() {
+    return typeof window.AndroidTTS !== 'undefined' && window.AndroidTTS !== null;
+  },
   get available() {
-    return !!this.voice && state.settings.audio;
+    if (!state.settings.audio) return false;
+    if (this.native) {
+      try {
+        return !!window.AndroidTTS.isReady();
+      } catch (e) {
+        return false;
+      }
+    }
+    return !!this.voice;
   },
   speak(text, rate) {
     if (!this.available) return false;
+    if (this.native) {
+      try {
+        window.AndroidTTS.speak(String(text), rate || state.settings.rate);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);

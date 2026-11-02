@@ -38,6 +38,28 @@ function boot() {
   });
   render();
   cloud.init();
+  // Offline support and "Install app" when served over http(s), e.g. GitHub Pages.
+  // Skipped for file:// (not allowed by browsers) and inside the claude.ai viewer.
+  if (
+    'serviceWorker' in navigator &&
+    /^https?:$/.test(location.protocol) &&
+    !window.claude &&
+    typeof window.AndroidTTS === 'undefined'
+  ) {
+    navigator.serviceWorker
+      .register('sw.js')
+      .then((reg) => {
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller)
+              toast('Update ready. Close and reopen Hanzi Flow to get it.');
+          });
+        });
+      })
+      .catch(() => {});
+  }
   const idle = window.requestIdleCallback || ((f) => setTimeout(f, 1500));
   idle(() => {
     const chars = new Set();

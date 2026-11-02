@@ -1,0 +1,4 @@
+// Root build file. The Android Gradle Plugin version lives here; Gradle itself is pinned by the wrapper.
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}

@@ -688,12 +688,16 @@ SCREENS.me = function (params) {
         h(
           'div',
           { class: 'sub' },
-          audio.voices.length
-            ? audio.voices.length +
+          audio.native
+            ? audio.available || !S.audio
+              ? 'Using the phone’s text-to-speech engine'
+              : 'No Chinese voice installed. Android Settings → Text-to-speech → Google Speech Services → Install voice data → Chinese.'
+            : audio.voices.length
+              ? audio.voices.length +
                 ' Mandarin voice' +
                 (audio.voices.length === 1 ? '' : 's') +
                 ' found'
-            : 'No Mandarin voice found in this browser',
+              : 'No Mandarin voice found in this browser',
         ),
       ),
       switchEl(S.audio, (v) => {

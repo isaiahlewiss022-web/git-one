@@ -37,9 +37,12 @@ jobs:
       - if: steps.pages.outputs.enabled == 'true'
         uses: actions/configure-pages@v5
       - if: steps.pages.outputs.enabled == 'true'
+        name: Collect the site (without the Android sources)
+        run: rsync -a --exclude android --exclude tools hanzi-flow/ _site/
+      - if: steps.pages.outputs.enabled == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: hanzi-flow
+          path: _site
       - if: steps.pages.outputs.enabled == 'true'
         id: deployment
         uses: actions/deploy-pages@v4

@@ -1,0 +1,46 @@
+plugins {
+    id 'com.android.application'
+}
+
+// versionCode comes from the GitHub run number (-PversionCode=123) so every build is an upgrade.
+def vCode = (project.hasProperty('versionCode') ? project.property('versionCode') : '1') as Integer
+
+android {
+    namespace 'app.hanziflow'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'app.hanziflow'
+        minSdk 26
+        targetSdk 34
+        versionCode vCode
+        versionName "1.0.${vCode}"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../keystore/hanzi-flow.jks')
+            storePassword 'hanziflow'
+            keyAlias 'hanziflow'
+            keyPassword 'hanziflow'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            shrinkResources false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Serves the bundled web app from app assets on a proper https origin (WebViewAssetLoader).
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

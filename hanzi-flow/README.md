@@ -56,6 +56,21 @@ Pronunciation uses the browser's built-in speech voices (Web Speech API). Most
 phones and desktop Chrome/Edge include a Mandarin voice; if none is found, the
 listening parts fall back to pinyin prompts.
 
+## On your phone
+
+**Android app (APK).** Every push to `main` builds a signed APK with the workflow in
+`.github/workflows/android.yml` and attaches it to a GitHub release. On the phone, open
+the repository's **Releases** page, download **HanziFlow.apk**, and allow the install when
+Android asks. Later builds install over the old one and keep your progress. The app bundles
+everything and works offline; pronunciation uses the phone's own text-to-speech engine
+(install Chinese voice data under Android Settings → Text-to-speech if words are silent).
+Sources are in `android/`.
+
+**Install from the browser (Android, iPhone, desktop).** The site is also a Progressive Web
+App: once it is served over https (GitHub Pages, see below), open it in Chrome and choose
+**Install app** from the menu, or in Safari on iPhone choose **Add to Home Screen**. It gets
+its own icon and window and keeps working offline (`manifest.webmanifest`, `sw.js`).
+
 ## Running locally
 Just open `index.html`. The data files are plain scripts, so it also works from a
 `file://` URL. To serve it instead:

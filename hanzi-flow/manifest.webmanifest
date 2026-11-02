@@ -1,0 +1,19 @@
+{
+  "name": "Hanzi Flow",
+  "short_name": "Hanzi Flow",
+  "description": "Chinese character trainer: match arcade, tone and listening drills, stroke writing and spaced repetition across HSK 1–6.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f1f2ee",
+  "theme_color": "#f1f2ee",
+  "lang": "en",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
