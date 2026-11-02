@@ -99,7 +99,20 @@ function go(name, params) {
   state.ui.params = params || null;
   render();
 }
+// Appearance: 'system' follows the device, 'light' / 'dark' force one look. The stylesheet
+// reads data-theme on <html>; inside the Android app the status bar is recoloured too.
+function applyTheme() {
+  const t = state.settings.theme;
+  const root = document.documentElement;
+  if (t === 'dark' || t === 'light') root.setAttribute('data-theme', t);
+  else root.removeAttribute('data-theme');
+  try {
+    if (window.AndroidTTS && typeof window.AndroidTTS.setTheme === 'function')
+      window.AndroidTTS.setTheme(t);
+  } catch (e) {}
+}
 function render() {
+  applyTheme();
   clearScreen();
   renderTabs();
   renderChips();

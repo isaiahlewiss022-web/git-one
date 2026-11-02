@@ -31,6 +31,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private TextToSpeech tts;
     private volatile boolean ttsReady = false;
+    private Boolean themeOverride = null; // null = follow the system
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,8 +86,10 @@ public class MainActivity extends Activity {
     }
 
     private void applyColors() {
-        boolean dark = (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
-                == Configuration.UI_MODE_NIGHT_YES;
+        boolean dark = themeOverride != null
+                ? themeOverride
+                : (getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                        == Configuration.UI_MODE_NIGHT_YES;
         int paper = dark ? Color.parseColor("#14171b") : Color.parseColor("#f1f2ee");
         web.setBackgroundColor(paper);
         getWindow().setStatusBarColor(paper);
@@ -161,6 +164,15 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stop() {
             if (ttsReady) tts.stop();
+        }
+
+        /** "dark", "light" or "system": recolour the status and navigation bars to match the page. */
+        @JavascriptInterface
+        public void setTheme(final String theme) {
+            runOnUiThread(() -> {
+                themeOverride = "dark".equals(theme) ? Boolean.TRUE : "light".equals(theme) ? Boolean.FALSE : null;
+                applyColors();
+            });
         }
     }
 }

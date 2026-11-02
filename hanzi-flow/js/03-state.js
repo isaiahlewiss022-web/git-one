@@ -28,6 +28,7 @@ const DEFAULTS = {
   matchBoards: 5,
   matchHear: true,
   tutorialSeen: false,
+  theme: 'system',
 };
 const state = {
   items: {},

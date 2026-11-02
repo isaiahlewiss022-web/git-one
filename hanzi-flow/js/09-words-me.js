@@ -593,7 +593,36 @@ SCREENS.me = function (params) {
       ),
     );
   const set = h('div', { class: 'card', id: 'settings' });
-  set.append(h('h3', { style: 'margin-bottom:6px' }, 'Learning'));
+  set.append(h('h3', { style: 'margin-bottom:6px' }, 'Appearance'));
+  const themeRow = h('div', { class: 'filters' });
+  for (const [v, l] of [
+    ['system', 'Match device'],
+    ['light', 'Light'],
+    ['dark', 'Dark'],
+  ])
+    themeRow.append(
+      h(
+        'button',
+        {
+          class: 'fchip' + (S.theme === v ? ' active' : ''),
+          onclick: () => {
+            setSetting('theme', v);
+            render();
+          },
+        },
+        l,
+      ),
+    );
+  set.append(
+    h(
+      'div',
+      { class: 'setrow', style: 'display:block' },
+      h('label', null, 'Theme'),
+      h('div', { class: 'sub', style: 'margin-bottom:8px' }, 'Paper by day, ink stone by night'),
+      themeRow,
+    ),
+  );
+  set.append(h('h3', { style: 'margin:18px 0 6px' }, 'Learning'));
   set.append(
     h(
       'div',
