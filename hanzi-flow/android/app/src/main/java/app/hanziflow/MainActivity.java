@@ -8,6 +8,8 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
@@ -49,6 +51,9 @@ public class MainActivity extends Activity {
     private String wantedKey = null;   // cache key of the newest request; older results are dropped
     private String wantedText = null;
     private float wantedRate = 1f;
+    private int wantedReq = 0;         // number of the newest app-audio request
+    private int startedReq = 0;        // number of the last request whose playback really started
+    private final Handler main = new Handler(Looper.getMainLooper());
     private Boolean themeOverride = null; // null = follow the system
 
     @Override
@@ -200,12 +205,17 @@ public class MainActivity extends Activity {
     }
 
     /** Main thread. Speak {@code text}: from the cache if it is there, else synthesize it first. */
-    private void speakNow(String text, float rate) {
+    private void speakNow(final String text, final float rate) {
         releasePlayer();
         String key = cacheKey(text, rate);
         wantedKey = key;
         wantedText = text;
         wantedRate = rate;
+        final int req = ++wantedReq;
+        // Safety net: if the word is not audibly under way soon, let the engine speak it itself.
+        main.postDelayed(() -> {
+            if (wantedReq == req && startedReq != req && wantedKey != null) fallBack(text, rate);
+        }, 2500);
         File ready = new File(ttsDir, key + ".wav");
         if (ready.isFile() && ready.length() > 44) {
             play(ready, text, rate);
@@ -216,10 +226,20 @@ public class MainActivity extends Activity {
             tts.setSpeechRate(rate);
             String id = key + "#" + (++ttsSeq);
             int res = tts.synthesizeToFile(text, null, partFile(id), id);
-            if (res != TextToSpeech.SUCCESS) speakDirect(text, rate);
+            if (res != TextToSpeech.SUCCESS) fallBack(text, rate);
         } catch (Exception e) {
-            speakDirect(text, rate);
+            fallBack(text, rate);
         }
+    }
+
+    /**
+     * Main thread. The app-audio path did not work for this word: forget the request (so a
+     * late file or the safety net cannot speak it a second time) and let the engine speak.
+     */
+    private void fallBack(String text, float rate) {
+        wantedKey = null;
+        releasePlayer();
+        speakDirect(text, rate);
     }
 
     /** Called by the engine on its own thread when a file is finished (or failed). */
@@ -233,7 +253,7 @@ public class MainActivity extends Activity {
         runOnUiThread(() -> {
             if (!key.equals(wantedKey)) return; // the learner has moved on to another word
             if (usable) play(ready, wantedText, wantedRate);
-            else speakDirect(wantedText, wantedRate);
+            else fallBack(wantedText, wantedRate);
         });
     }
 
@@ -247,24 +267,29 @@ public class MainActivity extends Activity {
                     .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                     .build());
             mp.setDataSource(file.getAbsolutePath());
-            mp.setOnPreparedListener(p -> p.start());
+            final int req = wantedReq;
+            mp.setOnPreparedListener(p -> {
+                if (player != p) return;
+                startedReq = req;
+                p.start();
+            });
             mp.setOnCompletionListener(p -> {
                 if (player == p) player = null;
                 p.release();
             });
             mp.setOnErrorListener((p, what, extra) -> {
-                if (player == p) player = null;
+                boolean current = player == p;
+                if (current) player = null;
                 p.release();
                 file.delete();
-                speakDirect(text, rate);
+                if (current) fallBack(text, rate);
                 return true;
             });
             player = mp;
             mp.prepareAsync();
         } catch (Exception e) {
-            releasePlayer();
             file.delete();
-            speakDirect(text, rate);
+            fallBack(text, rate);
         }
     }
 
@@ -334,11 +359,29 @@ public class MainActivity extends Activity {
             return ttsReady;
         }
 
+        /** The phone's voice speaks directly, at the phone's media volume. */
         @JavascriptInterface
         public void speak(final String text, final float rate) {
+            speakVia(text, rate, false);
+        }
+
+        /**
+         * viaApp = true: the app plays the word itself (cached file), so the app's own volume
+         * applies. viaApp = false: the engine speaks directly.
+         */
+        @JavascriptInterface
+        public void speakVia(final String text, final float rate, final boolean viaApp) {
             if (!ttsReady || text == null || text.trim().isEmpty()) return;
             final float r = rate > 0 ? rate : 1f;
-            runOnUiThread(() -> speakNow(text, r));
+            runOnUiThread(() -> {
+                if (viaApp) {
+                    speakNow(text, r);
+                } else {
+                    wantedKey = null;
+                    releasePlayer();
+                    speakDirect(text, r);
+                }
+            });
         }
 
         @JavascriptInterface

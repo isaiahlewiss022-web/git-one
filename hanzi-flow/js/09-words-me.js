@@ -796,6 +796,55 @@ SCREENS.me = function (params) {
       }),
     ),
   );
+  // Android app only: who plays the spoken words.
+  if (audio.native && typeof window.AndroidTTS.speakVia === 'function')
+    set.append(
+      h(
+        'div',
+        { class: 'setrow' },
+        h(
+          'div',
+          null,
+          h('label', null, 'Words follow this app’s volume'),
+          h(
+            'div',
+            { class: 'sub' },
+            S.speechOut === 'app'
+              ? 'On: Hanzi Flow plays the words itself. If you hear nothing, raise this app’s own volume slider in the phone’s volume panel.'
+              : 'Off: the phone’s voice speaks at media volume, whatever this app’s own volume slider says.',
+          ),
+        ),
+        switchEl(S.speechOut === 'app', (v) => {
+          setSetting('speechOut', v ? 'app' : 'phone');
+          render();
+          audio.speak('你好');
+        }),
+      ),
+    );
+  set.append(
+    h(
+      'div',
+      { class: 'setrow' },
+      h(
+        'div',
+        null,
+        h('label', null, 'Test the voice'),
+        h('div', { class: 'sub' }, 'Says 你好 (nǐ hǎo)'),
+      ),
+      h(
+        'button',
+        {
+          class: 'btn sm',
+          type: 'button',
+          onclick: () => {
+            if (!audio.speak('你好')) toast('No Chinese voice available on this device');
+          },
+        },
+        h('span', { html: ICON.speaker }),
+        ' Play',
+      ),
+    ),
+  );
   if (audio.voices.length > 1) {
     const sel = h(
       'select',

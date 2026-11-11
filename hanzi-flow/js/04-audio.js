@@ -56,7 +56,12 @@ const audio = {
     if (!this.available) return false;
     if (this.native) {
       try {
-        window.AndroidTTS.speak(String(text), rate || state.settings.rate);
+        const r = rate || state.settings.rate;
+        // 'app': Hanzi Flow plays the word itself, so the app's own volume slider applies.
+        // 'phone' (default): the phone's voice speaks directly at media volume.
+        if (state.settings.speechOut === 'app' && typeof window.AndroidTTS.speakVia === 'function')
+          window.AndroidTTS.speakVia(String(text), r, true);
+        else window.AndroidTTS.speak(String(text), r);
         return true;
       } catch (e) {
         return false;

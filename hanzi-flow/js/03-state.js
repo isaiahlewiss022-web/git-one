@@ -29,6 +29,7 @@ const DEFAULTS = {
   matchHear: true,
   tutorialSeen: false,
   theme: 'system',
+  speechOut: 'phone', // Android app only: 'phone' = the phone's voice speaks directly, 'app' = the app plays the words
   typeMode: 'ask', // 'hanzi' | 'pinyin' once the learner has chosen how to type answers
   dailyGoal: 100, // xp per day
 };
@@ -69,6 +70,7 @@ function normalizeSettings() {
   for (const k of Object.keys(DEFAULTS)) if (typeof S[k] !== typeof DEFAULTS[k]) S[k] = DEFAULTS[k];
   if (!['ask', 'hanzi', 'pinyin'].includes(S.typeMode)) S.typeMode = 'ask';
   if (!['system', 'light', 'dark'].includes(S.theme)) S.theme = 'system';
+  if (!['phone', 'app'].includes(S.speechOut)) S.speechOut = 'phone';
   if (!(S.dailyGoal >= 10 && S.dailyGoal <= 2000)) S.dailyGoal = DEFAULTS.dailyGoal;
 }
 let saveT = null;
