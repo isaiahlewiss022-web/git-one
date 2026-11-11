@@ -49,6 +49,7 @@ public class MainActivity extends Activity {
     private MediaPlayer player;        // plays the cached file; main thread only
     private int ttsSeq = 0;            // makes every synthesis request's temp file unique
     private String wantedKey = null;   // cache key of the newest request; older results are dropped
+    private String wantedId = null;    // utterance id the newest request is waiting for, if any
     private String wantedText = null;
     private float wantedRate = 1f;
     private int wantedReq = 0;         // number of the newest app-audio request
@@ -216,15 +217,21 @@ public class MainActivity extends Activity {
         main.postDelayed(() -> {
             if (wantedReq == req && startedReq != req && wantedKey != null) fallBack(text, rate);
         }, 2500);
+        wantedId = null;
+        try {
+            tts.stop(); // silence a direct-speech fallback and drop whatever is still queued
+        } catch (Exception ignored) {
+        }
         File ready = new File(ttsDir, key + ".wav");
         if (ready.isFile() && ready.length() > 44) {
             play(ready, text, rate);
             return;
         }
         try {
-            tts.stop(); // drop whatever is still queued from an earlier tap
+            ttsDir.mkdirs(); // the cache may have been cleared while the app was open
             tts.setSpeechRate(rate);
             String id = key + "#" + (++ttsSeq);
+            wantedId = id;
             int res = tts.synthesizeToFile(text, null, partFile(id), id);
             if (res != TextToSpeech.SUCCESS) fallBack(text, rate);
         } catch (Exception e) {
@@ -251,7 +258,8 @@ public class MainActivity extends Activity {
         final boolean usable = ok && part.isFile() && part.length() > 44 && part.renameTo(ready);
         if (!usable) part.delete();
         runOnUiThread(() -> {
-            if (!key.equals(wantedKey)) return; // the learner has moved on to another word
+            // Only the newest request counts: the learner may have moved on, or asked again.
+            if (!key.equals(wantedKey) || !id.equals(wantedId)) return;
             if (usable) play(ready, wantedText, wantedRate);
             else fallBack(wantedText, wantedRate);
         });

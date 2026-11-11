@@ -406,5 +406,7 @@ window.CF_GLOSS = {
 "长处": ["strong point; strength", "good quality; advantage"],
 "绿茶": ["green tea"],
 "积极性": ["enthusiasm; motivation", "initiative; drive"],
-"老头儿": ["old man (informal)"]
+"老头儿": ["old man (informal)"],
+"起到": ["to have (an effect); to play (a role)"],
+"大厦": ["large building; tower", "mansion"]
 };

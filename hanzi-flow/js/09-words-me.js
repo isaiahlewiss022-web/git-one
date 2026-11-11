@@ -150,7 +150,9 @@ SCREENS.words = function () {
   screenEl.append(root);
   draw();
 };
-function openSheet(w) {
+// inDrill: opened from a running drill. The buttons then leave the screen alone, so the
+// round in progress is not restarted or abandoned.
+function openSheet(w, inDrill) {
   const bg = h('div', {
     class: 'sheet-bg',
     onclick: (e) => {
@@ -213,7 +215,7 @@ function openSheet(w) {
           if (!audio.speak(w.s)) toast('No Chinese voice available on this device');
         },
       }),
-      canWrite(w)
+      canWrite(w) && !inDrill
         ? h(
             'button',
             {
@@ -236,7 +238,8 @@ function openSheet(w) {
                 markKnown(w);
                 close();
                 toast('Marked as mastered');
-                render();
+                if (inDrill) renderChips();
+                else render();
               },
             },
             'I know this',
@@ -250,7 +253,8 @@ function openSheet(w) {
                 resetWord(w);
                 close();
                 toast('Progress reset for ' + w.s);
-                render();
+                if (inDrill) renderChips();
+                else render();
               },
             },
             'Reset',
@@ -287,7 +291,7 @@ function openSheet(w) {
       h(
         'div',
         { class: 'row' },
-        related.map((x) => wordLink(x)),
+        related.map((x) => wordLink(x, inDrill)),
       ),
     );
   if (it)
@@ -429,6 +433,13 @@ function practiceWrite(w) {
 }
 
 // ======== ME: progress + settings ========
+// Re-render Me without losing the reader's place (render() scrolls to the top).
+function rerenderHere() {
+  const y = window.scrollY;
+  state.ui.params = null; // do not replay the gear's scroll-to-settings
+  render();
+  window.scrollTo(0, y);
+}
 SCREENS.me = function (params) {
   const S = state.settings;
   const root = h('div', { class: 'stack fade-in' });
@@ -607,7 +618,7 @@ SCREENS.me = function (params) {
           class: 'fchip' + (S.theme === v ? ' active' : ''),
           onclick: () => {
             setSetting('theme', v);
-            render();
+            rerenderHere();
           },
         },
         l,
@@ -635,7 +646,7 @@ SCREENS.me = function (params) {
           class: 'fchip' + (S.typeMode === v ? ' active' : ''),
           onclick: () => {
             setSetting('typeMode', v);
-            render();
+            rerenderHere();
           },
         },
         l,
@@ -672,6 +683,7 @@ SCREENS.me = function (params) {
         'select',
         {
           id: 's-goal',
+          style: 'flex:none',
           onchange: (e) => setSetting('dailyGoal', +e.target.value || 100),
         },
         [
@@ -816,7 +828,7 @@ SCREENS.me = function (params) {
         ),
         switchEl(S.speechOut === 'app', (v) => {
           setSetting('speechOut', v ? 'app' : 'phone');
-          render();
+          rerenderHere();
           audio.speak('你好');
         }),
       ),

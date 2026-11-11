@@ -4,6 +4,13 @@
     <!-- Only used for the optional web fonts; the app itself is fully bundled. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Android 11+: lets TextToSpeech find the phone's speech engine. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:label="@string/app_name"
         android:icon="@mipmap/ic_launcher"

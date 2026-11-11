@@ -13,7 +13,8 @@ const SENT_PUNCT = /[\s\p{P}\p{S}]/u;
 
 // Cut a sentence into tiles. Tagged vocabulary words become one tile each (longest match
 // first); characters no tag covers are gathered into small tiles of their own (names etc.).
-// Returns null when the sentence contains digits or Latin letters, which make poor tiles.
+// Returns null when the sentence contains digits or Latin letters, or more than three untagged
+// characters in a row: such a run cannot be cut into sensible tiles.
 function sentenceTiles(s) {
   const zh = s[0];
   const words = [...new Set(s[4])].sort((a, b) => b.length - a.length);
@@ -39,7 +40,7 @@ function sentenceTiles(s) {
     } else {
       loose += ch;
       i++;
-      if (loose.length >= 3) flush();
+      if (loose.length > 3) return null;
     }
   }
   flush();
@@ -74,7 +75,7 @@ function pickSentences(n) {
     most = [],
     easy = [];
   SENT.forEach((s, idx) => {
-    if (skip.has(idx) || s[0].length > 16) return;
+    if (skip.has(idx) || s[0].length > 16 || SENT_DRILL_SKIP.test(s[2])) return;
     const tiles = sentenceTiles(s);
     if (!tiles || tiles.length < 3 || tiles.length > 8) return;
     const known = tiles.filter(isStudiedTile).length;
@@ -94,8 +95,15 @@ function pickSentences(n) {
 // A few extra tiles that do not belong in the sentence.
 function sentenceDecoys(item, n) {
   const text = item.tiles.join('');
+  const real = item.tiles.map((t) => BY.get(t)).filter(Boolean);
   const out = [];
-  const ok = (w) => w.s.length <= 2 && !text.includes(w.s) && !out.includes(w.s);
+  // Never a word that sounds like, or means the same as, a tile of the sentence (他 for 她,
+  // 能 for 会): the learner could build a correct sentence with it and be marked wrong.
+  const ok = (w) =>
+    w.s.length <= 2 &&
+    !text.includes(w.s) &&
+    !out.includes(w.s) &&
+    !real.some((t) => soundKey(t) === soundKey(w) || sharesMeaning(t, w) || sharesMeaning(w, t));
   for (const w of shuffle(studiedWords())) {
     if (out.length >= n) break;
     if (ok(w)) out.push(w.s);
@@ -145,7 +153,7 @@ function sentenceAnswerEl(item, outcome, title, detail) {
         ? h(
             'div',
             { class: 'row', style: 'margin-top:8px;gap:6px' },
-            words.map((w) => wordLink(w)),
+            words.map((w) => wordLink(w, true)),
           )
         : null,
     ),
@@ -306,6 +314,7 @@ function renderSentenceDrill() {
     for (let tries = 0; tries < 400 && wrong.length < 2; tries++) {
       const o = SENT[Math.floor(Math.random() * SENT.length)];
       if (o[3] > s[3] + 1 || o[2] === s[2] || wrong.includes(o[2]) || o[2].length > 70) continue;
+      if (SENT_DRILL_SKIP.test(o[2])) continue;
       wrong.push(o[2]);
     }
     const opts = shuffle([s[2], ...wrong]);

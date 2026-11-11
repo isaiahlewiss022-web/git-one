@@ -219,10 +219,11 @@ function sentEl(s, hl) {
     h('div', { class: 'en' }, s[2]),
   );
 }
-function wordLink(w) {
+// inDrill: the chip sits inside a running drill, so its sheet must not re-render the screen.
+function wordLink(w, inDrill) {
   return h(
     'button',
-    { class: 'btn sm ghost', onclick: () => openSheet(w) },
+    { class: 'btn sm ghost', onclick: () => openSheet(w, inDrill) },
     h('span', { class: 'hz' }, w.s),
     ' ',
     pyEl(w.y),

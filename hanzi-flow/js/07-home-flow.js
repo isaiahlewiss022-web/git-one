@@ -459,10 +459,18 @@ function nextCard() {
   updateTop();
   if (session.sinceBoard >= 6) {
     const up = new Set(),
-      um = new Set();
+      um = new Set(),
+      kept = [];
     const words = uniqueLast(session.recent, 8)
       .map((k) => BY.get(k))
-      .filter((w) => w && !up.has(w.p) && !um.has(w.m[0]) && (up.add(w.p), um.add(w.m[0]), true))
+      .filter(
+        (w) =>
+          w &&
+          !up.has(w.p) &&
+          !um.has(w.m[0]) &&
+          !kept.some((o) => meaningClash(o, w)) &&
+          (up.add(w.p), um.add(w.m[0]), kept.push(w), true),
+      )
       .slice(0, 5);
     if (words.length >= 4) {
       session.sinceBoard = 0;
@@ -843,8 +851,7 @@ function promptEl(w, mode, q) {
     p.append(h('div', { class: 'en' }, w.m[0]));
     if (w.m[1]) p.append(h('div', { class: 'small muted' }, w.m[1]));
     if (posText(w)) p.append(h('div', { class: 'small faint' }, posText(w)));
-  }
-  else if (mode === 'audio') {
+  } else if (mode === 'audio') {
     const b = h('button', {
       class: 'btn',
       style: 'font-size:18px;padding:14px 22px',
@@ -976,9 +983,10 @@ function continueBtn(label) {
       document.removeEventListener('keydown', key);
       return;
     }
-    if (e.key === 'Enter' && !e.repeat && e.timeStamp > born) {
+    if (e.key === 'Enter') {
+      // Always swallowed: a held key must not press the focused button on its own.
       e.preventDefault();
-      b.click();
+      if (!e.repeat && e.timeStamp > born) b.click();
     }
   };
   document.addEventListener('keydown', key);
@@ -1182,9 +1190,9 @@ function renderBoardCard(words) {
         addXP(5);
         audio.sfx('perfect');
       }
-      const cta = continueBtn();
-      wrap.append(fb, cta);
-      showFeedback(cta);
+      const done = h('div', { class: 'fbwrap' }, fb, continueBtn());
+      wrap.append(done);
+      showFeedback(done);
       save();
       updateTop();
     },

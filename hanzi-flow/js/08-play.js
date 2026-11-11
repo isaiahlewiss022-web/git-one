@@ -164,7 +164,7 @@ function drawBoard(deck, n) {
   let i = 0;
   while (i < deck.length && out.length < n) {
     const w = deck[i];
-    if (usedP.has(key(w)) || usedM.has(w.m[0])) {
+    if (usedP.has(key(w)) || usedM.has(w.m[0]) || out.some((o) => meaningClash(o, w))) {
       i++;
       continue;
     }
@@ -1152,7 +1152,8 @@ function renderWriteDrill() {
               xp += 12 * w.s.length;
             } else if (outcome === 'almost') xp += 4 * w.s.length;
             else slip(w);
-            holder.append(
+            // Inside the feedback wrapper, so the scroll that follows shows both.
+            (holder.querySelector('.fbwrap') || holder).append(
               h(
                 'button',
                 {
@@ -1166,7 +1167,6 @@ function renderWriteDrill() {
                 'Next',
               ),
             );
-            showFeedback(holder.lastChild);
           },
         });
       })

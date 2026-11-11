@@ -6,7 +6,7 @@
  *
  * Bump VERSION whenever data/ or vendor/ files change, so installed phones fetch them again.
  */
-const VERSION = 'hanzi-flow-2026-11-11';
+const VERSION = 'hanzi-flow-2026-11-11b';
 const SHELL = [
   './',
   'index.html',
@@ -37,7 +37,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(VERSION)
-      .then((cache) => cache.addAll(SHELL))
+      // 'reload' skips the browser's HTTP cache, so a new version never stores a stale copy
+      .then((cache) => cache.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))
       .then(() => self.skipWaiting()),
   );
 });

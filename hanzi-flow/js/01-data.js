@@ -18,7 +18,14 @@ const GLOSS = window.CF_GLOSS || {};
 function tidyMeanings(m) {
   const first = m[0] || '';
   if (first.length <= 60) return m;
-  let s = first.replace(/\s*\([^)]*\)/g, '').trim();
+  // Innermost brackets first, so a note inside a note goes too.
+  let s = first,
+    prev;
+  do {
+    prev = s;
+    s = s.replace(/\s*\([^()]*\)/g, '');
+  } while (s !== prev);
+  s = s.replace(/\s+([,;])/g, '$1').trim();
   if (s.length > 60 && s.includes(';')) {
     let cut = '';
     for (const part of s.split(';')) {
@@ -43,10 +50,12 @@ const W = V.map((r, i) => ({
 }));
 const BY = new Map(W.map((w) => [w.s, w]));
 const CH = window.CF_CHARS || {};
-// Example sentences. The crowd-sourced ones are screened for themes that do not belong in a
-// vocabulary drill.
+// Example sentences. A few themes are kept out everywhere. Milder ones are fine as an example
+// on a word's own sheet (讨厌, 血, 药店) but are not drilled (SENT_DRILL_SKIP).
 const SENT_BLOCK =
-  /\b(kill|murder|suicid|sex|rape|naked|nude|drunk|drug|porn|die[sd]?\b|dead|death|damn|hell\b|shit|fuck|bitch|stupid|idiot|hate|gun|shoot|shot\b|blood|whore|prostitut|corpse|stab|bomb|terror|racis|nazi|slave|ugly|fat\b)/i;
+  /\b(murder|suicid|sex|rape|naked|nude|porn|shit|fuck|bitch|whore|prostitut|corpse|nazi)/i;
+const SENT_DRILL_SKIP =
+  /\b(kill|drunk|drug(?!store)|die[sd]?\b|dead(?!line)|death|damn|hell\b|stupid|idiot|hate|gun|shoot|shot\b|blood(?! (test|supply|pressure|type|donor))|stab\b|bomb|terror|racis|slave|ugly|fat\b)/i;
 const SENT = (window.CF_SENTENCES || []).filter((s) => !SENT_BLOCK.test(s[2]));
 const SENT_BY = new Map();
 SENT.forEach((s, i) => {

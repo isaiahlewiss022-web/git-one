@@ -177,6 +177,11 @@ function makeWriter(el, ch, opts) {
 }
 
 // ======== distractors ========
+// Two words clash when the label of one is among the listed meanings of the other
+// (常 "often; frequently" next to 常常 "frequently; often"): either answer would be right.
+function meaningClash(a, b) {
+  return a.m.includes(b.m[0]) || b.m.includes(a.m[0]);
+}
 function distractors(w, n, kind, usedP) {
   const pool = BY_LEVEL[w.l].filter((x) => x !== w);
   let cands = [];
@@ -207,6 +212,7 @@ function distractors(w, n, kind, usedP) {
     seenP = new Set([pk(w), ...(usedP || [])]);
   const take = (x) => {
     if (seen.has(x.s) || seenM.has(x.m[0]) || (kind !== 'meaning' && seenP.has(pk(x)))) return;
+    if (kind === 'meaning' && meaningClash(w, x)) return;
     seen.add(x.s);
     seenM.add(x.m[0]);
     seenP.add(pk(x));

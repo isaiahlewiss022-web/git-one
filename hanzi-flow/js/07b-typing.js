@@ -9,6 +9,8 @@
 
 // ======== typing ========
 const HAN_RE = /\p{Script=Han}/u;
+// Words by their traditional spelling, for answers typed on a traditional keyboard.
+const BY_T = new Map(W.filter((w) => w.t).map((w) => [w.t, w]));
 
 // Only the Chinese characters of what was typed (drops spaces, punctuation, stray letters).
 function hanOnly(str) {
@@ -34,25 +36,34 @@ function sameWord(typed, w) {
 }
 // The short English glosses of a word, normalized, for spotting synonyms:
 // 但是 "but; however" and 可是 "but; however" share the keys "but" and "however".
-function glossKeys(w) {
-  if (w._gk) return w._gk;
+// With `shown`, only the meanings a card displays (the first two).
+function glossKeys(w, shown) {
+  const slot = shown ? '_gs' : '_gk';
+  if (w[slot]) return w[slot];
   const out = new Set();
-  for (const m of w.m)
-    for (const part of m.split(/[;,/]/)) {
+  for (const m of shown ? w.m.slice(0, 2) : w.m) {
+    // Notes in brackets go first, innermost first: they can hold commas and slashes of their own.
+    let s = m.toLowerCase(),
+      prev;
+    do {
+      prev = s;
+      s = s.replace(/\([^()]*\)/g, ' ');
+    } while (s !== prev);
+    for (const part of s.split(/[;,/]/)) {
       const k = part
-        .toLowerCase()
-        .replace(/\([^)]*\)/g, ' ')
         .replace(/[^a-z0-9' ]+/g, ' ')
         .replace(/\s+/g, ' ')
         .trim()
         .replace(/^to /, '');
       if (k.length >= 2) out.add(k);
     }
-  return (w._gk = out);
+  }
+  return (w[slot] = out);
 }
-function sharesMeaning(a, b) {
-  const ka = glossKeys(a);
-  for (const k of glossKeys(b)) if (ka.has(k)) return true;
+// Does `other` (the word that was typed) also mean what the card for `w` shows?
+function sharesMeaning(other, w) {
+  const shown = glossKeys(w, true);
+  for (const k of glossKeys(other)) if (shown.has(k)) return true;
   return false;
 }
 
@@ -67,7 +78,7 @@ function judgeTyped(val, w, accept) {
     if (!accept.han) return { verdict: 'need-pinyin' };
     const typed = hanOnly(val);
     if (sameWord(typed, w)) return { verdict: 'good', via: 'han', typed };
-    const x = BY.get(typed);
+    const x = BY.get(typed) || BY_T.get(typed);
     if (x && x !== w) {
       if (accept.synonyms && sharesMeaning(x, w))
         return { verdict: 'synonym', other: x, via: 'han', typed };
@@ -215,11 +226,12 @@ function renderType(w, opts) {
   const btn = h('button', { class: 'btn primary', type: 'button' }, 'Check');
   const box = h('form', { class: 'typebox', novalidate: true }, input, btn);
   const note = h('div', { class: 'typenote', role: 'status', hidden: true });
-  const fb = h('div');
+  const fb = h('div', { class: 'fbwrap' });
   const say = (...kids) => {
     note.innerHTML = '';
     note.append(...kids);
     note.hidden = false;
+    showFeedback(note); // the keyboard is still open: bring the note above it
   };
   const hz = (t) => h('span', { class: 'hz' }, t);
 
@@ -316,14 +328,20 @@ function renderType(w, opts) {
   };
 
   // Chinese keyboards compose text: Enter while composing picks a candidate, it is not an answer.
+  // Safari sends the candidate-picking Enter just after compositionend, so the flag lingers
+  // there for a moment. Elsewhere an Enter after compositionend is a real answer.
   let composing = false;
+  const webkitIme =
+    /AppleWebKit/.test(navigator.userAgent) && !/Chrome|Chromium|Android/.test(navigator.userAgent);
   input.addEventListener('compositionstart', () => {
     composing = true;
   });
   input.addEventListener('compositionend', () => {
-    setTimeout(() => {
-      composing = false;
-    }, 30);
+    if (webkitIme)
+      setTimeout(() => {
+        composing = false;
+      }, 30);
+    else composing = false;
   });
   input.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
