@@ -43,6 +43,7 @@ SCREENS.home = function () {
               : 'Highest rank reached',
           ),
         ),
+        goalRing(),
       ),
       h('div', { class: 'bar' }, h('i', { style: 'width:' + pct + '%' })),
       h(
@@ -161,8 +162,8 @@ SCREENS.home = function () {
         tileBtn('声', 'Tones', 'Hear a word, pick its tone pattern', () =>
           go('play', { mode: 'tones' }),
         ),
-        tileBtn('听', 'Listen', 'Hear a word, pick the characters', () =>
-          go('play', { mode: 'listen' }),
+        tileBtn('句', 'Sentences', 'Build sentences from words you know', () =>
+          go('play', { mode: 'sentences' }),
         ),
         tileBtn('写', 'Write', 'Draw characters from memory', () => go('play', { mode: 'write' })),
       ),
@@ -207,7 +208,7 @@ SCREENS.home = function () {
                 null,
                 h('b', null, s),
                 ' · ',
-                h('span', { class: 'muted' }, STAGE_HELP[i + 1]),
+                h('span', { class: 'muted' }, stageHelp(i + 1)),
               ),
             ),
           ),
@@ -215,7 +216,7 @@ SCREENS.home = function () {
         h(
           'p',
           { class: 'small faint', style: 'margin:12px 0 0' },
-          'Tip: tones are part of the answer. When typing pinyin, add tone numbers (ni3 hao3) and write ü as v.',
+          'Tip: typing cards take Chinese characters from any Chinese keyboard, or pinyin with tone numbers (ni3 hao3, ü as v). You pick on the first one.',
         ),
       ),
     );
@@ -232,6 +233,32 @@ SCREENS.home = function () {
     );
   screenEl.append(root);
 };
+// Today's xp against the daily goal, as a ring.
+function goalRing() {
+  const goal = state.settings.dailyGoal;
+  const xp = (state.stats.days[todayKey()] || { x: 0 }).x || 0;
+  const R = 24,
+    C = 2 * Math.PI * R;
+  const off = C * (1 - clamp(xp / goal, 0, 1));
+  const el = h('div', {
+    class: 'goal' + (xp >= goal ? ' met' : ''),
+    role: 'img',
+    'aria-label': 'Daily goal: ' + xp + ' of ' + goal + ' xp today',
+    title: 'Daily goal: ' + xp + ' of ' + goal + ' xp today',
+    html:
+      '<svg viewBox="0 0 60 60" aria-hidden="true"><circle class="trk" cx="30" cy="30" r="' +
+      R +
+      '" fill="none"/><circle class="prg" cx="30" cy="30" r="' +
+      R +
+      '" fill="none" stroke-dasharray="' +
+      C.toFixed(1) +
+      '" stroke-dashoffset="' +
+      off.toFixed(1) +
+      '" transform="rotate(-90 30 30)"/></svg>',
+  });
+  el.append(h('div', { class: 'num' }, h('b', null, xp), h('span', null, '/ ' + goal + ' xp')));
+  return el;
+}
 function tileBtn(zi, title, desc, onclick) {
   return h(
     'button',
@@ -328,6 +355,7 @@ SCREENS.flow = function () {
     go('home');
     return;
   }
+  setFocus(true);
   flowTop();
   nextCard();
 };
@@ -404,7 +432,19 @@ function cardEl() {
   runCardCleanups();
   const c = $('#card');
   c.innerHTML = '';
+  window.scrollTo(0, 0);
   return c;
+}
+// After an answer, bring the feedback and the Continue button into view. On a phone the
+// feedback often lands below the fold.
+function showFeedback(el) {
+  requestAnimationFrame(() => {
+    if (!el.isConnected) return;
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try {
+      el.scrollIntoView({ block: 'nearest', behavior: calm ? 'auto' : 'smooth' });
+    } catch (e) {}
+  });
 }
 function uniqueLast(arr, n) {
   const out = [];
@@ -468,6 +508,7 @@ function afterAnswer(w, outcome, perfect) {
   updateTop();
 }
 function finishSession() {
+  setFocus(false);
   const c = cardEl();
   const acc = session.answered ? Math.round((100 * session.correct) / session.answered) : 100;
   const xp = state.stats.xp - session.xpStart;
@@ -798,12 +839,11 @@ function promptEl(w, mode, q) {
   if (mode === 'hanzi')
     p.append(h('div', { class: 'hz-big' }, state.settings.trad && w.t ? w.t : w.s));
   else if (mode === 'pinyin') p.append(pyEl(w.y));
-  else if (mode === 'meaning')
-    p.append(
-      h('div', { class: 'en' }, w.m[0]),
-      w.m[1] ? h('div', { class: 'small muted' }, w.m[1]) : null,
-      h('div', { class: 'small faint' }, posText(w)),
-    );
+  else if (mode === 'meaning') {
+    p.append(h('div', { class: 'en' }, w.m[0]));
+    if (w.m[1]) p.append(h('div', { class: 'small muted' }, w.m[1]));
+    if (posText(w)) p.append(h('div', { class: 'small faint' }, posText(w)));
+  }
   else if (mode === 'audio') {
     const b = h('button', {
       class: 'btn',
@@ -845,7 +885,7 @@ function renderMC(w, { prompt, answer, q }) {
   task.append(promptEl(w, prompt, q));
   const list = h('div', { class: 'opts' });
   let answered = false;
-  const fb = h('div');
+  const fb = h('div', { class: 'fbwrap' });
   const choose = (x, btn) => {
     if (answered) return;
     answered = true;
@@ -860,6 +900,7 @@ function renderMC(w, { prompt, answer, q }) {
     afterAnswer(w, ok ? 'good' : 'again', ok);
     audio.sfx(ok ? 'good' : 'bad');
     fb.append(feedbackEl(w, ok ? 'good' : 'again', ok ? 'Correct' : 'Not quite'), continueBtn());
+    showFeedback(fb);
   };
   opts.forEach((x, i) => {
     const b = h(
@@ -919,7 +960,7 @@ function continueBtn(label) {
   const b = h(
     'button',
     {
-      class: 'btn primary block',
+      class: 'btn primary block cta',
       style: 'margin-top:4px',
       onclick: () => {
         if (used || !b.isConnected) return;
@@ -935,7 +976,7 @@ function continueBtn(label) {
       document.removeEventListener('keydown', key);
       return;
     }
-    if (e.key === 'Enter' && e.timeStamp > born) {
+    if (e.key === 'Enter' && !e.repeat && e.timeStamp > born) {
       e.preventDefault();
       b.click();
     }
@@ -944,79 +985,6 @@ function continueBtn(label) {
   onCardLeave(() => document.removeEventListener('keydown', key));
   setTimeout(() => b.focus({ preventScroll: true }), 50);
   return b;
-}
-function renderType(w, { fromEnglish }) {
-  const c = cardEl();
-  const task = h('div', { class: 'task fade-in' });
-  task.append(
-    promptEl(
-      w,
-      fromEnglish ? 'meaning' : 'hanzi',
-      fromEnglish ? 'Type the pinyin for this word' : 'Type the pinyin, tones included',
-    ),
-  );
-  const input = h('input', {
-    type: 'text',
-    placeholder: 'e.g. ni3 hao3',
-    autocomplete: 'off',
-    autocapitalize: 'off',
-    autocorrect: 'off',
-    spellcheck: 'false',
-    'aria-label': 'Pinyin answer',
-  });
-  const btn = h('button', { class: 'btn primary' }, 'Check');
-  const box = h('div', { class: 'typebox' }, input, btn);
-  const fb = h('div');
-  let done = false;
-  const submit = () => {
-    if (done) return;
-    const val = input.value.trim();
-    if (!val) return;
-    done = true;
-    input.disabled = true;
-    btn.disabled = true;
-    const r = checkPinyin(val, w.y);
-    let outcome, title, detail;
-    if (r === 'good') {
-      outcome = 'good';
-      title = 'Correct';
-    } else if (r === 'toneless') {
-      outcome = state.settings.strictTones ? 'again' : 'almost';
-      title = 'Right sounds, no tones';
-      detail = 'Add the tone numbers next time: ' + numericText(w.y);
-    } else if (r === 'tones') {
-      outcome = 'again';
-      title = 'Right sounds, wrong tones';
-      detail = 'It is ' + pyText(w.y) + ' (' + numericText(w.y) + ')';
-    } else {
-      outcome = 'again';
-      title = 'Not quite';
-      detail = 'Answer: ' + numericText(w.y);
-    }
-    if (state.settings.autoplay) audio.speak(w.s);
-    afterAnswer(w, outcome, outcome === 'good');
-    audio.sfx(outcome === 'good' ? 'good' : outcome === 'almost' ? 'almost' : 'bad');
-    fb.append(feedbackEl(w, outcome, title, detail), continueBtn());
-  };
-  btn.addEventListener('click', submit);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      submit();
-    }
-  });
-  task.append(
-    box,
-    fb,
-    h(
-      'div',
-      { class: 'kbd' },
-      'Tones as numbers (ma1 ma2 ma3 ma4), neutral tone needs none · ü = v',
-    ),
-  );
-  c.append(task);
-  setTimeout(() => input.focus({ preventScroll: true }), 80);
 }
 function renderWrite(w, { inFlow, onDone }) {
   const c = cardEl();
@@ -1038,7 +1006,7 @@ function renderWrite(w, { inFlow, onDone }) {
     chars.length > 1 ? dots : null,
   );
   const area = h('div', { class: 'writers' });
-  const fb = h('div');
+  const fb = h('div', { class: 'fbwrap' });
   const tools = h('div', { class: 'row', style: 'justify-content:center' });
   task.append(p, area, tools, fb);
   c.append(task);
@@ -1063,6 +1031,7 @@ function renderWrite(w, { inFlow, onDone }) {
       fb.append(feedbackEl(w, outcome, title, detail));
       onDone && onDone(outcome, mistakes);
     }
+    showFeedback(fb);
     audio.sfx(
       outcome === 'good'
         ? mistakes
@@ -1213,7 +1182,9 @@ function renderBoardCard(words) {
         addXP(5);
         audio.sfx('perfect');
       }
-      wrap.append(fb, continueBtn());
+      const cta = continueBtn();
+      wrap.append(fb, cta);
+      showFeedback(cta);
       save();
       updateTop();
     },

@@ -183,6 +183,7 @@ SCREENS.play = function (params) {
   if (mode === 'tones') return renderToneDrill();
   if (mode === 'listen') return renderListenDrill();
   if (mode === 'write') return renderWriteDrill();
+  if (mode === 'sentences') return renderSentenceDrill();
   const root = h(
     'div',
     { class: 'stack fade-in' },
@@ -204,6 +205,12 @@ SCREENS.play = function (params) {
         'Match',
         'Pair the words you are learning with their pinyin, meaning or sound. Short runs with a clear finish; sudden death for the brave.',
         () => go('play', { mode: 'match' }),
+      ),
+      tileBtn(
+        '句',
+        'Sentences',
+        'Build Chinese sentences from the words you know, by meaning or by ear. Word order is where the grammar lives.',
+        () => go('play', { mode: 'sentences' }),
       ),
       tileBtn(
         '声',
@@ -466,6 +473,7 @@ function renderMatchSetup() {
 
 function renderMatchGame(source) {
   clearScreen();
+  setFocus(true);
   const S = state.settings;
   const deck = matchDeck(source, S.matchLevels);
   if (deck.length < 2) {
@@ -613,6 +621,7 @@ function renderMatchGame(source) {
     save();
     renderChips();
     clearScreen();
+    setFocus(false);
     const acc = g.pairs + g.mist ? Math.round((100 * g.pairs) / (g.pairs + g.mist)) : 0;
     const label =
       why === 'done'
@@ -753,6 +762,7 @@ function drillWords(n, filter) {
   return out;
 }
 function drillShell(title, sub, total) {
+  setFocus(true);
   const root = h('div', { class: 'stack fade-in' });
   const prog = h('div', { class: 'bar' }, h('i', { style: 'width:0%' }));
   const score = h('span', { class: 'chip tnum' }, '0 / ' + total);
@@ -772,6 +782,8 @@ function drillShell(title, sub, total) {
   };
 }
 function drillSummary(body, title, correct, total, xp, extra) {
+  setFocus(false);
+  window.scrollTo(0, 0);
   body.innerHTML = '';
   const acc = Math.round((100 * correct) / Math.max(1, total));
   body.append(
@@ -881,7 +893,7 @@ function renderToneDrill() {
     const opts = shuffle([w.y, ...variants]);
     const list = h('div', { class: 'opts' });
     let done = false;
-    const fb = h('div');
+    const fb = h('div', { class: 'fbwrap' });
     opts.forEach((y, k) => {
       const isRight = y === w.y;
       const b = h(
@@ -932,7 +944,7 @@ function renderToneDrill() {
               h(
                 'button',
                 {
-                  class: 'btn primary block',
+                  class: 'btn primary block cta',
                   style: 'margin-top:4px',
                   onclick: () => {
                     i++;
@@ -942,6 +954,7 @@ function renderToneDrill() {
                 'Next',
               ),
             );
+            showFeedback(fb);
           },
         },
         h('span', { class: 'key' }, k + 1),
@@ -1030,7 +1043,7 @@ function renderListenDrill() {
     const opts = shuffle([w, ...distractors(w, 3, 'hanzi')]);
     const list = h('div', { class: 'opts' });
     let done = false;
-    const fb = h('div');
+    const fb = h('div', { class: 'fbwrap' });
     opts.forEach((x, k) => {
       const b = h(
         'button',
@@ -1086,7 +1099,7 @@ function renderListenDrill() {
               h(
                 'button',
                 {
-                  class: 'btn primary block',
+                  class: 'btn primary block cta',
                   style: 'margin-top:4px',
                   onclick: () => {
                     i++;
@@ -1096,6 +1109,7 @@ function renderListenDrill() {
                 'Next',
               ),
             );
+            showFeedback(fb);
           },
         },
         h('span', { class: 'key' }, k + 1),
@@ -1142,7 +1156,7 @@ function renderWriteDrill() {
               h(
                 'button',
                 {
-                  class: 'btn primary block',
+                  class: 'btn primary block cta',
                   style: 'margin-top:10px',
                   onclick: () => {
                     i++;
@@ -1152,6 +1166,7 @@ function renderWriteDrill() {
                 'Next',
               ),
             );
+            showFeedback(holder.lastChild);
           },
         });
       })

@@ -623,6 +623,66 @@ SCREENS.me = function (params) {
     ),
   );
   set.append(h('h3', { style: 'margin:18px 0 6px' }, 'Learning'));
+  const typeRow = h('div', { class: 'filters' });
+  for (const [v, l] of [
+    ['hanzi', 'Chinese characters'],
+    ['pinyin', 'Pinyin + tone numbers'],
+  ])
+    typeRow.append(
+      h(
+        'button',
+        {
+          class: 'fchip' + (S.typeMode === v ? ' active' : ''),
+          onclick: () => {
+            setSetting('typeMode', v);
+            render();
+          },
+        },
+        l,
+      ),
+    );
+  set.append(
+    h(
+      'div',
+      { class: 'setrow', style: 'display:block' },
+      h('label', null, 'Typing answers'),
+      h(
+        'div',
+        { class: 'sub', style: 'margin-bottom:8px' },
+        S.typeMode === 'ask'
+          ? 'Not chosen yet. You will be asked on the first typing card.'
+          : S.typeMode === 'hanzi'
+            ? 'Cards play the word or show its meaning; you type 汉字 with your Chinese keyboard.'
+            : 'You type pinyin with tone numbers, like ni3 hao3.',
+      ),
+      typeRow,
+    ),
+  );
+  set.append(
+    h(
+      'div',
+      { class: 'setrow' },
+      h(
+        'div',
+        null,
+        h('label', { for: 's-goal' }, 'Daily goal'),
+        h('div', { class: 'sub' }, 'The ring on Today fills as you earn xp'),
+      ),
+      h(
+        'select',
+        {
+          id: 's-goal',
+          onchange: (e) => setSetting('dailyGoal', +e.target.value || 100),
+        },
+        [
+          [50, 'Casual · 50 xp'],
+          [100, 'Regular · 100 xp'],
+          [200, 'Serious · 200 xp'],
+          [300, 'Intense · 300 xp'],
+        ].map(([v, l]) => h('option', { value: v, selected: S.dailyGoal === v }, l)),
+      ),
+    ),
+  );
   set.append(
     h(
       'div',

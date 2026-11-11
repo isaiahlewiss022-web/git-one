@@ -1294,3 +1294,187 @@ textarea.data {
   color: var(--accent-ink);
   background: var(--accent);
 }
+
+/* ---- typing cards ---- */
+/* A text field has a wide built-in width (more so with a Chinese font); never let it or any
+   other child widen the card column past the screen. */
+.task {
+  grid-template-columns: minmax(0, 1fr);
+}
+.typebox {
+  min-width: 0;
+}
+.typebox input {
+  width: 100%;
+}
+.typebox input.hzin {
+  font-family: var(--hanzi-ui);
+  font-size: 22px;
+}
+.typenote {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--almost-soft);
+  border: 1px solid var(--almost);
+  font-size: 14px;
+}
+.typenote .hz {
+  font-size: 18px;
+}
+.hint {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+.linkbtn {
+  border: 0;
+  background: none;
+  padding: 4px 0;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.blanks {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+.blanks i {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 1.5px dashed var(--ink-3);
+  border-radius: 4px;
+}
+
+/* ---- focus mode: sessions, games and drills hide the tab bar ---- */
+body.focus .tabs {
+  display: none;
+}
+body.focus #screen {
+  padding-block-end: 28px;
+}
+.btn.cta {
+  position: sticky;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 4;
+  box-shadow: var(--shadow);
+}
+.fbwrap {
+  scroll-margin-bottom: 20px;
+}
+/* Keyboard shortcuts mean nothing on a touch screen. */
+@media (hover: none) and (pointer: coarse) {
+  .kbd {
+    display: none;
+  }
+}
+
+/* ---- daily goal ring ---- */
+.goal {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex: none;
+}
+.goal svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.goal .trk {
+  stroke: var(--line-2);
+  stroke-width: 6;
+}
+.goal .prg {
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+.goal.met .prg {
+  stroke: var(--good);
+}
+.goal .num {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1.05;
+}
+.goal .num b {
+  font-family: var(--display);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+.goal .num span {
+  font-size: 9px;
+  color: var(--ink-3);
+}
+/* An odd tile at the end of a two-column grid takes the full row. */
+.grid2 > .tilebtn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  min-height: 0;
+}
+
+/* ---- sentences drill ---- */
+.szh {
+  font-family: var(--hanzi-ui);
+  font-size: 26px;
+  line-height: 1.35;
+}
+.sline {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  min-height: 64px;
+  padding: 8px 2px 12px;
+  border-bottom: 2px dashed var(--line);
+}
+.sbank {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.stile {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  min-height: 46px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 2px 0 var(--line);
+  font-family: var(--hanzi-ui);
+  font-size: 22px;
+  line-height: 1.2;
+}
+.stile small {
+  font-family: var(--body);
+  font-size: 11px;
+  line-height: 1.1;
+  color: var(--ink-3);
+}
+.stile.used {
+  visibility: hidden;
+}
+.sline .stile {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: none;
+}
+.sline.ok .stile {
+  border-color: var(--good);
+  background: var(--good-soft);
+}
+.sline.bad .stile {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}

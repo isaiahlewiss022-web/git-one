@@ -11,20 +11,43 @@
 const DAY = 86400000,
   MIN = 60000;
 const V = window.CF_VOCAB || [];
+// Short, hand-checked meanings for common words (data/glosses.js) replace the dictionary ones.
+const GLOSS = window.CF_GLOSS || {};
+// Dictionary glosses can run long. Keep the first meaning short enough for a button, and
+// keep the full text as a later meaning so the word sheet still shows it.
+function tidyMeanings(m) {
+  const first = m[0] || '';
+  if (first.length <= 60) return m;
+  let s = first.replace(/\s*\([^)]*\)/g, '').trim();
+  if (s.length > 60 && s.includes(';')) {
+    let cut = '';
+    for (const part of s.split(';')) {
+      if (cut && (cut + ';' + part).length > 60) break;
+      cut = cut ? cut + ';' + part : part;
+    }
+    s = cut.trim();
+  }
+  if (!s || s === first) return m;
+  return [s, ...m.slice(1, 3), first];
+}
 const W = V.map((r, i) => ({
   id: i,
   s: r[0],
   t: r[1],
   p: r[2],
   y: r[3],
-  m: r[4],
+  m: tidyMeanings(GLOSS[r[0]] || r[4]),
   l: r[5],
   pos: r[6] || '',
   cl: r[7] || '',
 }));
 const BY = new Map(W.map((w) => [w.s, w]));
 const CH = window.CF_CHARS || {};
-const SENT = window.CF_SENTENCES || [];
+// Example sentences. The crowd-sourced ones are screened for themes that do not belong in a
+// vocabulary drill.
+const SENT_BLOCK =
+  /\b(kill|murder|suicid|sex|rape|naked|nude|drunk|drug|porn|die[sd]?\b|dead|death|damn|hell\b|shit|fuck|bitch|stupid|idiot|hate|gun|shoot|shot\b|blood|whore|prostitut|corpse|stab|bomb|terror|racis|nazi|slave|ugly|fat\b)/i;
+const SENT = (window.CF_SENTENCES || []).filter((s) => !SENT_BLOCK.test(s[2]));
 const SENT_BY = new Map();
 SENT.forEach((s, i) => {
   for (const w of s[4]) {
@@ -72,6 +95,23 @@ const STAGE_HELP = [
   'Draw the characters from memory',
   'Mixed review at long intervals',
 ];
+// The typing rungs read differently depending on how the learner types (see 07b-typing.js).
+function stageHelp(i) {
+  const mode = state.settings.typeMode;
+  if (i === 4)
+    return mode === 'hanzi'
+      ? 'Hear it and type the characters'
+      : mode === 'pinyin'
+        ? 'Type the pinyin with tones from the characters'
+        : 'Type the word: characters from its sound, or pinyin with tones';
+  if (i === 5)
+    return mode === 'hanzi'
+      ? 'Type the characters from the English'
+      : mode === 'pinyin'
+        ? 'Type the pinyin from the English'
+        : 'Type the word from the English';
+  return STAGE_HELP[i];
+}
 const RANKS = [
   [0, '童生', 'Tóngshēng', 'Student'],
   [400, '秀才', 'Xiùcai', 'Flourishing Talent'],

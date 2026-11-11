@@ -111,9 +111,15 @@ function applyTheme() {
       window.AndroidTTS.setTheme(t);
   } catch (e) {}
 }
+// Focus mode: during a session, game or drill the tab bar is hidden so the answers and the
+// Continue button get the whole screen. Every full render turns it off; screens turn it on.
+function setFocus(on) {
+  document.body.classList.toggle('focus', !!on);
+}
 function render() {
   applyTheme();
   clearScreen();
+  setFocus(false);
   renderTabs();
   renderChips();
   const fn = SCREENS[state.ui.screen] || SCREENS.home;

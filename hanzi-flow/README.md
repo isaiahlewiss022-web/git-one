@@ -21,8 +21,8 @@ Every word climbs seven rungs. Each rung is a harder kind of test:
 | 1 Meaning | see the word, pick the meaning | recognition |
 | 2 Sound | see the word, pick the pinyin (tone traps included) | recognition |
 | 3 Listening | hear the word, pick the characters among sound-alikes | listening |
-| 4 Recall | see the word, type the pinyin with tone numbers | active recall |
-| 5 Produce | see the English, type the pinyin | production |
+| 4 Recall | hear the word and type its characters, or see the characters and type the pinyin with tones | active recall |
+| 5 Produce | see the English, type the word (characters or pinyin) | production |
 | 6 Writing | see pinyin and meaning, draw each character stroke by stroke | handwriting |
 | 7 Mastered | mixed tests at long intervals | maintenance |
 
@@ -32,6 +32,16 @@ brings it back within minutes. New words arrive in frequency order and get a qui
 intro card: stroke-order animation, tone-coloured pinyin, the parts inside each
 character with an etymology hint, and an example sentence you can tap to hear.
 
+### Typing answers
+Typing cards take either kind of answer, and you choose once on the first one (or in Me):
+
+- **Chinese characters**, typed with any Chinese keyboard (pinyin input, handwriting, voice).
+  The Recall rung then plays the word and shows its meaning instead of showing the characters.
+- **Pinyin with tone numbers** (`ni3 hao3`, `ü` as `v`) on an English keyboard.
+
+A homophone (她 for 他) is marked "right sound, different word". Another word with the same
+meaning (可是 for 但是) gets a hint and a free second try instead of a miss.
+
 ### Modes
 - **Flow** (Today tab): the daily session. Due reviews plus a few new words,
   interleaved, with a short Match board every six cards as a breather.
@@ -40,6 +50,9 @@ character with an etymology hint, and an example sentence you can tap to hear.
   every match is spoken and shown in full. No word repeats inside a run, a run is a
   fixed number of boards, and words you slip on come back for one last board. Timer,
   combo multiplier, best scores per setup, optional sudden death.
+- **Sentences**: build real sentences from word tiles, from the English or by ear, or read
+  a Chinese sentence and pick its meaning. It prefers sentences made of words you have
+  studied; words you have not met yet carry their pinyin.
 - **Tone Sniper**: hear and see a word, pick the exact tone pattern. Wrong options
   differ only in tone, which is exactly the thing most learners skip.
 - **Listen**: audio only, pick the characters among similar-sounding words.
@@ -99,12 +112,15 @@ js/04-audio.js        speech and sound effects
 js/05-srs.js          the ladder and spaced-repetition scheduling
 js/06-ui.js           screens, tabs, shared widgets
 js/07-home-flow.js    Today screen and the Flow session
+js/07b-typing.js      typing cards: characters or pinyin, homophone and synonym feedback
 js/08-play.js         Match board and arcade, Tone, Listen and Write drills
+js/08b-sentences.js   Sentences drill
 js/09-words-me.js     Words browser, word sheet, Me screen and settings
 js/10-main.js         start-up
 data/vocab.js         7,419 words, one per line: HSK 2.0 levels 1–6 plus HSK 3.0 band 1–6 words missing from the old lists
 data/chars.js         definitions, decomposition, etymology hints for every character used
 data/sentences.js     7,051 graded example sentences
+data/glosses.js       short hand-checked meanings that replace long dictionary glosses for common words
 data/strokes-N.js     stroke outlines and medians for the characters first met at level N (loaded on demand)
 vendor/hanzi-writer.min.js  stroke animation and quiz engine
 tools/build_data.py   regenerates data/ from the upstream sources

@@ -6,7 +6,7 @@
  *
  * Bump VERSION whenever data/ or vendor/ files change, so installed phones fetch them again.
  */
-const VERSION = 'hanzi-flow-2026-11-02';
+const VERSION = 'hanzi-flow-2026-11-11';
 const SHELL = [
   './',
   'index.html',
@@ -19,12 +19,15 @@ const SHELL = [
   'js/05-srs.js',
   'js/06-ui.js',
   'js/07-home-flow.js',
+  'js/07b-typing.js',
   'js/08-play.js',
+  'js/08b-sentences.js',
   'js/09-words-me.js',
   'js/10-main.js',
   'data/vocab.js',
   'data/chars.js',
   'data/sentences.js',
+  'data/glosses.js',
   'vendor/hanzi-writer.min.js',
   'icons/icon-192.png',
   'icons/icon-512.png',

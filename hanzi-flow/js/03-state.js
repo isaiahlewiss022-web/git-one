@@ -29,6 +29,8 @@ const DEFAULTS = {
   matchHear: true,
   tutorialSeen: false,
   theme: 'system',
+  typeMode: 'ask', // 'hanzi' | 'pinyin' once the learner has chosen how to type answers
+  dailyGoal: 100, // xp per day
 };
 const state = {
   items: {},
@@ -65,6 +67,9 @@ function normalizeSettings() {
   if (!ok(S.levels)) S.levels = [1];
   if (!ok(S.matchLevels)) S.matchLevels = S.levels.slice();
   for (const k of Object.keys(DEFAULTS)) if (typeof S[k] !== typeof DEFAULTS[k]) S[k] = DEFAULTS[k];
+  if (!['ask', 'hanzi', 'pinyin'].includes(S.typeMode)) S.typeMode = 'ask';
+  if (!['system', 'light', 'dark'].includes(S.theme)) S.theme = 'system';
+  if (!(S.dailyGoal >= 10 && S.dailyGoal <= 2000)) S.dailyGoal = DEFAULTS.dailyGoal;
 }
 let saveT = null;
 function save() {
@@ -94,9 +99,13 @@ function dayRec(k = todayKey()) {
   return d[k];
 }
 function addXP(n) {
+  const d = dayRec();
+  const goal = state.settings.dailyGoal;
+  const before = d.x;
   state.stats.xp += n;
-  dayRec().x += n;
+  d.x += n;
   cloud.dirty.add('meta');
+  if (before < goal && d.x >= goal) toast('Daily goal reached: ' + goal + ' xp');
 }
 function touchStreak() {
   const t = todayKey();

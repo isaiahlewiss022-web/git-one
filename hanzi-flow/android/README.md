@@ -3,7 +3,9 @@
 A thin native shell: the web app in `..` is copied into `app/src/main/assets/www/` at build
 time and shown full screen in a WebView. Pronunciation uses the phone's own text-to-speech
 engine through a small JavaScript bridge (`AndroidTTS`), because WebViews have no Web Speech
-voices.
+voices. The engine writes each word to a small audio file in the app's cache and the app
+plays it, so the sound counts as Hanzi Flow's own (per-app volume applies) and repeats are
+instant; if that fails the engine speaks directly.
 
 You do not need Android Studio. The GitHub workflow `.github/workflows/android.yml` builds a
 signed APK on every push to `main` and attaches it to a release:
